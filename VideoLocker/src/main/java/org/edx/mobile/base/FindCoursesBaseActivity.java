@@ -79,7 +79,7 @@ public abstract class FindCoursesBaseActivity extends BaseFragmentActivity imple
         webview.destroy();
     }
 
-    protected boolean isWebViewLoaded() {
+    public boolean isWebViewLoaded() {
         return isWebViewLoaded;
     }
 

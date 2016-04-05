@@ -10,6 +10,7 @@ import static org.edx.mobile.test.feature.matcher.ActionBarMatcher.isInActionBar
 import static org.hamcrest.CoreMatchers.allOf;
 
 public class NavigationDrawerInteractor {
+
     public static NavigationDrawerInteractor open() {
         onView(allOf(isInActionBar(), withContentDescription(R.string.label_open_drawer))).perform(click());
         return new NavigationDrawerInteractor();
@@ -18,5 +19,10 @@ public class NavigationDrawerInteractor {
     public LogInScreenInteractor logOut() {
         onView(withText(R.string.logout)).perform(click());
         return new LogInScreenInteractor();
+    }
+
+    public FindCoursesScreenInteractor selectFindCourses() {
+        onView(withText(R.string.label_find_courses)).perform(click());
+        return new FindCoursesScreenInteractor();
     }
 }
