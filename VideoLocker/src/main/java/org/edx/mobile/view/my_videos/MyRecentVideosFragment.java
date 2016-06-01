@@ -1,7 +1,8 @@
-package org.edx.mobile.view;
+package org.edx.mobile.view.my_videos;
 
 import android.content.Context;
 import android.content.res.Configuration;
+import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
@@ -12,17 +13,15 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.LinearLayout;
-import android.widget.ListView;
 
 import com.google.inject.Inject;
 
 import org.edx.mobile.R;
 import org.edx.mobile.base.BaseFragment;
 import org.edx.mobile.core.IEdxEnvironment;
+import org.edx.mobile.databinding.FragmentVideoListWithPlayerContainerBinding;
 import org.edx.mobile.interfaces.NetworkSubject;
 import org.edx.mobile.interfaces.SectionItemInterface;
 import org.edx.mobile.logger.Logger;
@@ -51,36 +50,33 @@ import java.util.Map;
 
 public class MyRecentVideosFragment extends BaseFragment implements IPlayerEventCallback {
 
-    private MyRecentVideoAdapter adapter;
-    private ListView videoListView;
-    private PlayerFragment playerFragment;
     private DeleteVideoDialogFragment deleteDialogFragment;
-    private int playingVideoIndex = -1;
-    private DownloadEntry videoModel;
-    private Button deleteButton;
     private CheckBox deleteCheckBox;
     private MenuItem deleteCheckBoxMenuItem;
     private CompoundButton.OnCheckedChangeListener deleteCheckBoxChangeListener;
-    private final Logger logger = new Logger(getClass().getName());
     private GetRecentDownloadedVideosTask getRecentDownloadedVideosTask;
+    private DownloadEntry videoModel;
+    private int playingVideoIndex = -1;
+    private MyRecentVideoAdapter adapter;
+    private PlayerFragment playerFragment;
+    private FragmentVideoListWithPlayerContainerBinding binding;
+    private final Logger logger = new Logger(getClass().getName());
 
     @Inject
-    protected IEdxEnvironment environment;
+    private IEdxEnvironment environment;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(!isLandscape());
+        environment.getSegment().trackScreenView(ISegment.Screens.MY_VIDEOS_RECENT);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
-        View view = inflater.inflate(R.layout.fragment_video_list_with_player_container, null);
-        environment.getSegment().trackScreenView(ISegment.Screens.MY_VIDEOS_RECENT);
-
-        return view;
+        return DataBindingUtil.inflate(inflater, R.layout.fragment_video_list_with_player_container, container, false).getRoot();
     }
 
     @Override
@@ -91,12 +87,11 @@ public class MyRecentVideosFragment extends BaseFragment implements IPlayerEvent
             restore(savedInstanceState);
         }
 
-        getView().findViewById(R.id.container_player).setVisibility(
-                playerFragment == null ? View.GONE : View.VISIBLE);
+        binding = DataBindingUtil.getBinding(getView());
 
-        videoListView = (ListView) getView().findViewById(R.id.list_video);
+        binding.myRecentVideosPlayerContainer.setVisibility(playerFragment == null ? View.GONE : View.VISIBLE);
 
-        if (videoListView != null) {
+        if (binding.listVideo != null) {
             adapter = new MyRecentVideoAdapter(getActivity(), environment) {
 
                 @Override
@@ -113,7 +108,7 @@ public class MyRecentVideosFragment extends BaseFragment implements IPlayerEvent
                 public void onSelectItem() {
                     int selectedItemsCount = adapter.getSelectedVideoItemsCount();
                     int totalVideos = adapter.getTotalVideoItemsCount();
-                    deleteButton.setEnabled(selectedItemsCount > 0);
+                    binding.deleteVideoButtons.deleteBtn.setEnabled(selectedItemsCount > 0);
                     setCheckBoxChecked(selectedItemsCount == totalVideos);
                 }
             };
@@ -121,12 +116,12 @@ public class MyRecentVideosFragment extends BaseFragment implements IPlayerEvent
                 adapter.setVideoId(videoModel.videoId);
             }
             adapter.setSelectedPosition(playingVideoIndex);
-            videoListView.setEmptyView(getView().findViewById(R.id.empty_list_view));
-            videoListView.setAdapter(adapter);
+            binding.listVideo.setEmptyView(binding.emptyListView);
+            binding.listVideo.setAdapter(adapter);
 
             showDeletePanel(getView());
 
-            videoListView.setOnItemClickListener(adapter);
+            binding.listVideo.setOnItemClickListener(adapter);
         }
     }
 
@@ -196,7 +191,7 @@ public class MyRecentVideosFragment extends BaseFragment implements IPlayerEvent
                         adapter.unselectAll();
                     }
                     notifyAdapter();
-                    deleteButton.setEnabled(isChecked);
+                    binding.deleteVideoButtons.deleteBtn.setEnabled(isChecked);
                 }
             };
         }
@@ -244,7 +239,7 @@ public class MyRecentVideosFragment extends BaseFragment implements IPlayerEvent
                     if (adapter.getCount() <= 0) {
                         hideDeletePanel(view);
                     }
-                    videoListView.setOnItemClickListener(adapter);
+                    binding.listVideo.setOnItemClickListener(adapter);
                     if (selectedId != null) {
                         adapter.setVideoId(selectedId);
                     }
@@ -341,9 +336,8 @@ public class MyRecentVideosFragment extends BaseFragment implements IPlayerEvent
 
         hideDeletePanel(getView());
 
-        View container = getView().findViewById(R.id.container_player);
-        if (container.getVisibility() != View.VISIBLE) {
-            container.setVisibility(View.VISIBLE);
+        if (binding.myRecentVideosPlayerContainer.getVisibility() != View.VISIBLE) {
+            binding.myRecentVideosPlayerContainer.setVisibility(View.VISIBLE);
         }
 
         // add and display player fragment
@@ -352,7 +346,7 @@ public class MyRecentVideosFragment extends BaseFragment implements IPlayerEvent
         playerFragment.setCallback(this);
         playerFragment.setNextPreviousListeners(getNextListener(), getPreviousListener());
         FragmentManager childManager = getChildFragmentManager();
-        childManager.beginTransaction().add(R.id.container_player, playerFragment).commit();
+        childManager.beginTransaction().add(R.id.my_recent_videos_player_container, playerFragment).commit();
         // the fragment needs to be added immediately in order to be playable
         childManager.executePendingTransactions();
         ((NetworkSubject) getActivity()).registerNetworkObserver(playerFragment);
@@ -362,7 +356,7 @@ public class MyRecentVideosFragment extends BaseFragment implements IPlayerEvent
 
     private void hideDeletePanel(View view) {
         // hide delete button panel at bottom
-        view.findViewById(R.id.delete_button_panel).setVisibility(View.GONE);
+        binding.deleteButtonPanel.setVisibility(View.GONE);
 
         // hide checkbox in action bar
         setCheckBoxVisible(false);
@@ -376,30 +370,19 @@ public class MyRecentVideosFragment extends BaseFragment implements IPlayerEvent
             return;
         }
 
-        LinearLayout deletePanel = (LinearLayout) view
-                .findViewById(R.id.delete_button_panel);
-        deletePanel.setVisibility(View.VISIBLE);
-
-        deleteButton = (Button) view
-                .findViewById(R.id.delete_btn);
-        final Button editButton = (Button) view
-                .findViewById(R.id.edit_btn);
-        editButton.setVisibility(View.VISIBLE);
-        final Button cancelButton = (Button) view
-                .findViewById(R.id.cancel_btn);
+        binding.deleteButtonPanel.setVisibility(View.VISIBLE);
 
         if (AppConstants.myVideosDeleteMode) {
-            deleteButton.setVisibility(View.VISIBLE);
-            cancelButton.setVisibility(View.VISIBLE);
-            editButton.setVisibility(View.GONE);
+            binding.deleteVideoButtons.deleteBtn.setVisibility(View.VISIBLE);
+            binding.deleteVideoButtons.cancelBtn.setVisibility(View.VISIBLE);
+            binding.deleteVideoButtons.editBtn.setVisibility(View.GONE);
         } else {
-            deleteButton.setVisibility(View.GONE);
-            cancelButton.setVisibility(View.GONE);
-            editButton.setVisibility(View.VISIBLE);
+            binding.deleteVideoButtons.deleteBtn.setVisibility(View.GONE);
+            binding.deleteVideoButtons.cancelBtn.setVisibility(View.GONE);
+            binding.deleteVideoButtons.editBtn.setVisibility(View.VISIBLE);
         }
 
-
-        deleteButton.setOnClickListener(new OnClickListener() {
+        binding.deleteVideoButtons.deleteBtn.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 ArrayList<SectionItemInterface> list = adapter
@@ -410,31 +393,31 @@ public class MyRecentVideosFragment extends BaseFragment implements IPlayerEvent
             }
         });
 
-        cancelButton.setOnClickListener(new OnClickListener() {
+        binding.deleteVideoButtons.cancelBtn.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                editButton.setVisibility(View.VISIBLE);
-                videoListView.setOnItemClickListener(adapter);
+                binding.deleteVideoButtons.editBtn.setVisibility(View.VISIBLE);
+                binding.listVideo.setOnItemClickListener(adapter);
                 AppConstants.myVideosDeleteMode = false;
                 setCheckBoxVisible(false);
                 adapter.unselectAll();
                 notifyAdapter();
-                deleteButton.setVisibility(View.GONE);
-                cancelButton.setVisibility(View.GONE);
+                binding.deleteVideoButtons.deleteBtn.setVisibility(View.GONE);
+                binding.deleteVideoButtons.cancelBtn.setVisibility(View.GONE);
             }
         });
 
-        editButton.setOnClickListener(new OnClickListener() {
+        binding.deleteVideoButtons.editBtn.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                editButton.setVisibility(View.GONE);
+                binding.deleteVideoButtons.editBtn.setVisibility(View.GONE);
                 AppConstants.myVideosDeleteMode = true;
                 notifyAdapter();
-                videoListView.setOnItemClickListener(null);
-                deleteButton.setEnabled(false);
-                deleteButton.setVisibility(View.VISIBLE);
-                cancelButton.setVisibility(View.VISIBLE);
+                binding.listVideo.setOnItemClickListener(null);
+                binding.deleteVideoButtons.deleteBtn.setEnabled(false);
+                binding.deleteVideoButtons.deleteBtn.setVisibility(View.VISIBLE);
+                binding.deleteVideoButtons.cancelBtn.setVisibility(View.VISIBLE);
                 setCheckBoxVisible(true);
             }
         });
@@ -485,15 +468,15 @@ public class MyRecentVideosFragment extends BaseFragment implements IPlayerEvent
         }
         addToRecentAdapter(getView());
         notifyAdapter();
-        videoListView.setOnItemClickListener(adapter);
+        binding.listVideo.setOnItemClickListener(adapter);
         setCheckBoxVisible(false);
         if (deletedVideoCount > 0) {
             UiUtil.showMessage(getView(), ResourceUtil.getFormattedStringForQuantity(getResources(),
                     R.plurals.deleted_video, "video_count", deletedVideoCount).toString());
         }
-        getView().findViewById(R.id.delete_btn).setVisibility(View.GONE);
-        getView().findViewById(R.id.edit_btn).setVisibility(View.VISIBLE);
-        getView().findViewById(R.id.cancel_btn).setVisibility(View.GONE);
+        binding.deleteVideoButtons.deleteBtn.setVisibility(View.GONE);
+        binding.deleteVideoButtons.editBtn.setVisibility(View.VISIBLE);
+        binding.deleteVideoButtons.cancelBtn.setVisibility(View.GONE);
     }
 
 
@@ -544,8 +527,7 @@ public class MyRecentVideosFragment extends BaseFragment implements IPlayerEvent
      *
      */
     protected boolean isLandscape() {
-        return (getResources().getConfiguration().orientation 
-                == Configuration.ORIENTATION_LANDSCAPE);
+        return (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE);
     }
 
     @Override
@@ -563,8 +545,8 @@ public class MyRecentVideosFragment extends BaseFragment implements IPlayerEvent
         playingVideoIndex = savedInstanceState.getInt("playingVideoIndex", -1);
         videoModel = (DownloadEntry) savedInstanceState.getSerializable("model");
         playerFragment = (PlayerFragment) getChildFragmentManager()
-                .findFragmentById(R.id.container_player);
-        if (playerFragment != null) {
+                .findFragmentById(R.id.my_recent_videos_player_container);
+        if (binding.myRecentVideosPlayerContainer != null) {
             playerFragment.setCallback(this);
             ((NetworkSubject) getActivity()).registerNetworkObserver(playerFragment);
         }
@@ -681,12 +663,8 @@ public class MyRecentVideosFragment extends BaseFragment implements IPlayerEvent
         }
     };
 
-    /**
-     * @return User's profile.
-     */
     protected ProfileModel getProfile() {
         PrefManager prefManager = new PrefManager(getActivity(), PrefManager.Pref.LOGIN);
         return prefManager.getCurrentUserProfile();
     }
-
 }

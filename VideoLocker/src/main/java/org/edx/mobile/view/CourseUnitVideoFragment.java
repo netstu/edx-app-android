@@ -126,7 +126,7 @@ public class CourseUnitVideoFragment extends CourseUnitFragment
 
         Intent extraIntent = getActivity().getIntent();
         if(extraIntent!=null){
-            if (extraIntent.hasExtra("FromMyVideos")) {
+            if (extraIntent.hasExtra(Router.EXTRA_FROM_MY_VIDEOS)) {
                 myVideosFlag = extraIntent.getBooleanExtra(
                     "FromMyVideos", false);
             }

@@ -46,6 +46,7 @@ import org.edx.mobile.util.Config;
 import org.edx.mobile.util.EmailUtil;
 import org.edx.mobile.view.dialog.IDialogCallback;
 import org.edx.mobile.view.dialog.NetworkCheckDialogFragment;
+import org.edx.mobile.view.my_videos.MyVideosActivity;
 
 import de.greenrobot.event.EventBus;
 
@@ -172,7 +173,7 @@ public class NavigationFragment extends BaseFragment {
                 Activity act = getActivity();
                 ((BaseFragmentActivity) act).closeDrawer();
 
-                if (!(act instanceof MyVideosTabActivity)) {
+                if (!(act instanceof MyVideosActivity)) {
                     environment.getRouter().showMyVideos(act);
                     //Finish need not be called if the current activity is MyCourseListing
                     // as on returning back from FindCourses,

@@ -1,4 +1,4 @@
-package org.edx.mobile.view;
+package org.edx.mobile.view.my_videos;
 
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
@@ -12,14 +12,14 @@ import org.edx.mobile.base.BaseVideosDownloadStateActivity;
 import org.edx.mobile.module.analytics.ISegment;
 import org.edx.mobile.view.adapters.StaticFragmentPagerAdapter;
 
-public class MyVideosTabActivity extends BaseVideosDownloadStateActivity {
+public class MyVideosActivity extends BaseVideosDownloadStateActivity {
 
     private View offlineBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_myvideos_tab);
+        setContentView(R.layout.activity_my_videos);
 
         // configure slider layout. This should be called only once and
         // hence is shifted to onCreate() function

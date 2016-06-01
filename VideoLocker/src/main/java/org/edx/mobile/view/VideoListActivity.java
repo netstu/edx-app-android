@@ -2,6 +2,7 @@ package org.edx.mobile.view;
 
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.FragmentManager;
@@ -17,6 +18,7 @@ import android.widget.CompoundButton.OnCheckedChangeListener;
 
 import org.edx.mobile.R;
 import org.edx.mobile.base.BaseVideosDownloadStateActivity;
+import org.edx.mobile.databinding.ActivityVideoListBinding;
 import org.edx.mobile.model.api.TranscriptModel;
 import org.edx.mobile.model.db.DownloadEntry;
 import org.edx.mobile.player.IPlayerEventCallback;
@@ -34,19 +36,19 @@ public class VideoListActivity extends BaseVideosDownloadStateActivity
     private boolean myVideosFlag;
     private CheckBox checkBox;
     private CourseVideoCheckBoxListener checklistener;
-    private View offlineBar;
     private PlayerFragment playerFragment;
     private VideoListFragment listFragment;
     private final Handler playHandler = new Handler();
     private Runnable playPending;
 
+    private ActivityVideoListBinding binding;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_video_list);
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_video_list);
 
         restore(savedInstanceState);
-
         if (playerFragment == null) {
             // this is to lock to portrait while player is invisible
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -55,21 +57,14 @@ public class VideoListActivity extends BaseVideosDownloadStateActivity
             try {
                 FragmentManager fm = getSupportFragmentManager();
                 FragmentTransaction ft = fm.beginTransaction();
-                ft.replace(R.id.container_player, playerFragment, "player");
+                ft.replace(R.id.video_list_player_container, playerFragment, "player");
                 ft.commit();
             } catch (Exception ex) {
                 logger.error(ex);
             }
         }
 
-        try {
-            myVideosFlag = this.getIntent().getBooleanExtra("FromMyVideos", false);
-        } catch (Exception ex) {
-            logger.error(ex);
-        }
-
-        offlineBar = findViewById(R.id.offline_bar);
-
+        myVideosFlag = this.getIntent().getBooleanExtra(Router.EXTRA_FROM_MY_VIDEOS, false);
         listFragment = (VideoListFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.list_fragment);
         listFragment.setCallback(this);
@@ -94,14 +89,9 @@ public class VideoListActivity extends BaseVideosDownloadStateActivity
     @Override
     protected void onResume() {
         super.onResume();
-        try{
-            View container = findViewById(R.id.container_player);
-            if (container == null || container.getVisibility() != View.VISIBLE) {
-                // this is to lock to portrait while player is invisible
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-            } 
-        }catch(Exception ex){
-            logger.error(ex);
+        if (binding.videoListPlayerContainer == null || binding.videoListPlayerContainer.getVisibility() != View.VISIBLE) {
+            // this is to lock to portrait while player is invisible
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         }
     }
 
@@ -116,8 +106,7 @@ public class VideoListActivity extends BaseVideosDownloadStateActivity
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        View container = findViewById(R.id.container_player);
-        outState.putInt("playerVisibility", container.getVisibility());
+        outState.putInt("playerVisibility", binding.videoListPlayerContainer.getVisibility());
         getSupportFragmentManager().putFragment(outState, "player", playerFragment);
         super.onSaveInstanceState(outState);
     }
@@ -131,25 +120,20 @@ public class VideoListActivity extends BaseVideosDownloadStateActivity
     }
 
     private void restore(Bundle savedInstanceState) {
-        try{
-            if (savedInstanceState != null) {
-                int visibility = savedInstanceState.getInt("playerVisibility", View.GONE);
-                View container = findViewById(R.id.container_player);
-                container.setVisibility(visibility == View.VISIBLE ? View.VISIBLE : View.GONE);
+        if (savedInstanceState != null) {
+            int visibility = savedInstanceState.getInt("playerVisibility", View.GONE);
+            binding.videoListPlayerContainer.setVisibility(visibility == View.VISIBLE ? View.VISIBLE : View.GONE);
 
-                if (playerFragment == null) {
-                    FragmentManager fm = getSupportFragmentManager();
-                    playerFragment = (PlayerFragment) fm.getFragment(
-                            savedInstanceState, "player");
-                    if (playerFragment != null) {
-                        FragmentTransaction ft = fm.beginTransaction();
-                        ft.replace(R.id.container_player, playerFragment, "player");
-                        ft.commit();
-                    } 
+            if (playerFragment == null) {
+                FragmentManager fm = getSupportFragmentManager();
+                playerFragment = (PlayerFragment) fm.getFragment(
+                        savedInstanceState, "player");
+                if (playerFragment != null) {
+                    FragmentTransaction ft = fm.beginTransaction();
+                    ft.replace(R.id.video_list_player_container, playerFragment, "player");
+                    ft.commit();
                 }
-            } 
-        }catch(Exception ex){
-            logger.error(ex);
+            }
         }
     }
 
@@ -161,18 +145,18 @@ public class VideoListActivity extends BaseVideosDownloadStateActivity
                     return;
                 }
             }
-        } catch(Exception ex) {}
+        } catch (Exception ex) {
+        }
 
 
-        try{
-            View container = findViewById(R.id.container_player);
-            container.setVisibility(View.VISIBLE);
+        try {
+            binding.videoListPlayerContainer.setVisibility(View.VISIBLE);
 
             // reload this model
             environment.getStorage().reloadDownloadEntry(video);
 
             logger.debug("Resumed= " + playerFragment.isResumed());
-            if ( !playerFragment.isResumed()) {
+            if (!playerFragment.isResumed()) {
                 // playback can work only if fragment is resume
                 if (playPending != null) {
                     playHandler.removeCallbacks(playPending);
@@ -195,8 +179,8 @@ public class VideoListActivity extends BaseVideosDownloadStateActivity
 
             TranscriptModel transcript = null;
             try {
-                if(video.videoId!=null){
-                    transcript =  environment.getServiceManager().getTranscriptsOfVideo(video.eid, video.videoId);
+                if (video.videoId != null) {
+                    transcript = environment.getServiceManager().getTranscriptsOfVideo(video.eid, video.videoId);
                 }
 
             } catch (Exception e) {
@@ -205,23 +189,22 @@ public class VideoListActivity extends BaseVideosDownloadStateActivity
 
             String filepath = null;
             // check if file available on local
-            if( video.isVideoForWebOnly ){
+            if (video.isVideoForWebOnly) {
                 //don't download anything
-            }
-            else if (video.filepath != null && video.filepath.length()>0) {
+            } else if (video.filepath != null && video.filepath.length() > 0) {
                 if (video.isDownloaded()) {
                     File f = new File(video.filepath);
                     if (f.exists()) {
                         // play from local
                         filepath = video.filepath;
                         logger.debug("playing from local file");
-                    } 
+                    }
                 }
             } else {
-                DownloadEntry de = (DownloadEntry)environment.getDatabase().getIVideoModelByVideoUrl(
-                        video.url, null); 
-                if(de!=null){
-                    if(de.filepath!=null){
+                DownloadEntry de = (DownloadEntry) environment.getDatabase().getIVideoModelByVideoUrl(
+                        video.url, null);
+                if (de != null) {
+                    if (de.filepath != null) {
                         File f = new File(de.filepath);
                         if (f.exists()) {
                             // play from local
@@ -230,10 +213,10 @@ public class VideoListActivity extends BaseVideosDownloadStateActivity
                                     "another Download Entry");
                         }
                     }
-                }       
+                }
             }
-            
-            if(filepath==null || filepath.length()<=0){
+
+            if (filepath == null || filepath.length() <= 0) {
                 // not available on local, so play online
                 logger.warn("Local file path not available");
 
@@ -242,7 +225,7 @@ public class VideoListActivity extends BaseVideosDownloadStateActivity
 
             playerFragment.play(filepath, video.lastPlayedOffset,
                     video.getTitle(), transcript, video);
-        }catch(Exception ex){
+        } catch (Exception ex) {
             logger.error(ex);
         }
     }
@@ -267,42 +250,39 @@ public class VideoListActivity extends BaseVideosDownloadStateActivity
         invalidateOptionsMenu();
     }
 
-    public void setCheckBoxSelected(){
-        try{
+    public void setCheckBoxSelected() {
+        try {
             checkBox.setOnCheckedChangeListener(null);
             checkBox.setChecked(true);
             checkBox.setOnCheckedChangeListener(checklistener);
-            //checkBox.setSelected(true);
             checkBox.setButtonDrawable(R.drawable.ic_checkbox_active);
-        }catch(Exception ex){
+        } catch (Exception ex) {
             logger.error(ex);
         }
     }
 
-    public void unsetCheckBoxSelected(){
+    public void unsetCheckBoxSelected() {
         checkBox.setOnCheckedChangeListener(null);
         checkBox.setChecked(false);
         checkBox.setOnCheckedChangeListener(checklistener);
-        //checkBox.setSelected(false);
         checkBox.setButtonDrawable(R.drawable.ic_checkbox_default);
-        //checkBox.setBackgroundResource(R.drawable.ic_checkbox_default);
     }
 
     @Override
     protected void onOffline() {
         super.onOffline();
-        if (offlineBar != null) {
-            offlineBar.setVisibility(View.VISIBLE);
+        if (binding.offlineBar != null) {
+            binding.offlineBar.setVisibility(View.VISIBLE);
         }
         if (playerFragment != null) {
             playerFragment.onOffline();
         }
 
-        if(listFragment!=null){
+        if (listFragment != null) {
             listFragment.onOffline();
         }
 
-        if(playerFragment!=null && listFragment!=null){
+        if (playerFragment != null && listFragment != null) {
             playerFragment.setNextPreviousListeners(listFragment.getNextListener(),
                     listFragment.getPreviousListener());
         }
@@ -325,8 +305,8 @@ public class VideoListActivity extends BaseVideosDownloadStateActivity
     @Override
     protected void onOnline() {
         super.onOnline();
-        if (offlineBar != null) {
-            offlineBar.setVisibility(View.GONE);
+        if (binding.offlineBar != null) {
+            binding.offlineBar.setVisibility(View.GONE);
         }
         if (!myVideosFlag) {
             AppConstants.videoListDeleteMode = false;
@@ -335,7 +315,7 @@ public class VideoListActivity extends BaseVideosDownloadStateActivity
             playerFragment.onOnline();
         }
         listFragment.onOnline();
-        if(playerFragment!=null && listFragment!=null){
+        if (playerFragment != null && listFragment != null) {
             playerFragment.setNextPreviousListeners(listFragment.getNextListener(),
                     listFragment.getPreviousListener());
         }
@@ -376,7 +356,7 @@ public class VideoListActivity extends BaseVideosDownloadStateActivity
         if (AppConstants.myVideosDeleteMode) {
             checkBox_menuItem.setVisible(true);
             checkBox.setVisibility(View.VISIBLE);
-            checkBox.setOnCheckedChangeListener(checklistener);
+            checkBox.setTextColor(getResources().getColor(R.color.white));
         } else {
             checkBox_menuItem.setVisible(false);
             checkBox.setVisibility(View.GONE);
@@ -389,18 +369,18 @@ public class VideoListActivity extends BaseVideosDownloadStateActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar actions click
         switch (item.getItemId()) {
-        case android.R.id.home:
-            hideCheckBox();
-            if(!NetworkUtil.isConnected(this)){
-                Intent intent = new Intent();
-                intent.setAction(AppConstants.VIDEOLIST_BACK_PRESSED);
-                sendBroadcast(intent); 
-            }
-            finish();
-            return true;
+            case android.R.id.home:
+                hideCheckBox();
+                if (!NetworkUtil.isConnected(this)) {
+                    Intent intent = new Intent();
+                    intent.setAction(AppConstants.VIDEOLIST_BACK_PRESSED);
+                    sendBroadcast(intent);
+                }
+                finish();
+                return true;
 
-        default:
-            return super.onOptionsItemSelected(item);
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 
@@ -413,17 +393,17 @@ public class VideoListActivity extends BaseVideosDownloadStateActivity
     @Override
     protected void onRestart() {
         super.onRestart();
-        if(myVideosFlag){
+        if (myVideosFlag) {
             listFragment.handleDeleteView();
         } else {
-            if(!NetworkUtil.isConnected(this)){
+            if (!NetworkUtil.isConnected(this)) {
                 listFragment.handleDeleteView();
             }
         }
 
         listFragment.setAdaptertoVideoList();
         listFragment.notifyAdapter();
-        
+
     }
 
     @Override
@@ -448,21 +428,23 @@ public class VideoListActivity extends BaseVideosDownloadStateActivity
     }
 
     public void onBackPressed() {
-        if(!NetworkUtil.isConnected(this)){
+        if (!NetworkUtil.isConnected(this)) {
             Intent intent = new Intent();
             intent.setAction(AppConstants.VIDEOLIST_BACK_PRESSED);
             sendBroadcast(intent);
         }
         finish();
-    };
+    }
+
+    ;
 
 
     @Override
     public boolean showInfoMessage(String message) {
         //If the wifi settings message is already shown on video player,
         //then do not show the info message
-        if(playerFragment.isShownWifiSettingsMessage()
-                && message.equalsIgnoreCase(getString(R.string.wifi_off_message))){
+        if (playerFragment.isShownWifiSettingsMessage()
+                && message.equalsIgnoreCase(getString(R.string.wifi_off_message))) {
             return false;
         }
         return super.showInfoMessage(message);

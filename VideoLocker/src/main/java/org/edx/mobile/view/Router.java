@@ -25,6 +25,7 @@ import org.edx.mobile.profiles.UserProfileActivity;
 import org.edx.mobile.util.AppConstants;
 import org.edx.mobile.util.Config;
 import org.edx.mobile.view.dialog.WebViewDialogActivity;
+import org.edx.mobile.view.my_videos.MyVideosActivity;
 
 import de.greenrobot.event.EventBus;
 
@@ -35,6 +36,7 @@ public class Router {
     public static final String EXTRA_COURSE_ID = "course_id";
     public static final String EXTRA_COURSE_DETAIL = "course_detail";
     public static final String EXTRA_ENROLLMENT = "enrollment";
+    public static final String EXTRA_FROM_MY_VIDEOS = "from_my_videos";
     public static final String EXTRA_COURSE_UNIT = "course_unit";
     public static final String EXTRA_COURSE_COMPONENT_ID = "course_component_id";
     public static final String EXTRA_COURSE_DATA = "course_data";
@@ -60,7 +62,7 @@ public class Router {
     }
 
     public void showMyVideos(Activity sourceActivity) {
-        Intent myVideosIntent = new Intent(sourceActivity, MyVideosTabActivity.class);
+        Intent myVideosIntent = new Intent(sourceActivity, MyVideosActivity.class);
         myVideosIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         sourceActivity.startActivity(myVideosIntent);
     }

@@ -65,7 +65,7 @@ public class CourseLectureListActivity extends BaseFragmentActivity {
         ArrayList<LectureModel> lectureList = new ArrayList<LectureModel>();
 
         ListView lectureListView = (ListView) findViewById(R.id.lecture_list);
-        initalizeAdaptor();
+        initializeAdapter();
         adapter.setItems(lectureList);
         lectureListView.setAdapter(adapter);
         lectureListView.setOnItemClickListener(adapter);
@@ -81,7 +81,7 @@ public class CourseLectureListActivity extends BaseFragmentActivity {
         }
     }
 
-    private void initalizeAdaptor(){
+    private void initializeAdapter(){
         adapter = new LectureAdapter(this, environment) {
             @Override
             public void onItemClicked(LectureModel model) {
@@ -97,7 +97,7 @@ public class CourseLectureListActivity extends BaseFragmentActivity {
                             VideoListActivity.class);
                     videoIntent.putExtra(Router.EXTRA_ENROLLMENT, enrollment);
                     videoIntent.putExtra("lecture", model);
-                    videoIntent.putExtra("FromMyVideos", false);
+                    videoIntent.putExtra(Router.EXTRA_FROM_MY_VIDEOS, false);
                     startActivity(videoIntent);
                 } catch (Exception e) {
                     logger.error(e);
@@ -191,7 +191,7 @@ public class CourseLectureListActivity extends BaseFragmentActivity {
         try{
             if(adapter==null){
                 //If adapter is null, reinitialize the adapter
-                initalizeAdaptor();
+                initializeAdapter();
             }
             if(enrollment!=null){
                 adapter.setStore(environment.getDatabase(), environment.getStorage(), enrollment.getCourse().getId());

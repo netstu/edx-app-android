@@ -8,5 +8,6 @@
     android:layout_marginRight="@dimen/checkbox_margin"
     android:layout_marginEnd="@dimen/checkbox_margin"
     android:button="@drawable/checkbox_selector"
+    android:textColor="@color/white"
     android:visibility="gone"
     tools:targetApi="17" />

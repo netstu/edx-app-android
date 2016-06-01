@@ -70,9 +70,9 @@ public class CourseOutlineFragment extends BaseFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-            Bundle savedInstanceState) {
+                             Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_course_outline, container, false);
-        listView = (ListView)view.findViewById(R.id.outline_list);
+        listView = (ListView) view.findViewById(R.id.outline_list);
         initializeAdapter();
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -99,7 +99,7 @@ public class CourseOutlineFragment extends BaseFragment {
         super.onActivityCreated(savedInstanceState);
         restore(savedInstanceState);
         final Bundle bundle = getArguments();
-        if( courseData == null ) {
+        if (courseData == null) {
             courseData = (EnrolledCoursesResponse) bundle.getSerializable(Router.EXTRA_ENROLLMENT);
             courseComponentId = bundle.getString(Router.EXTRA_COURSE_COMPONENT_ID);
         }
@@ -108,48 +108,56 @@ public class CourseOutlineFragment extends BaseFragment {
         updateRowSelection(bundle.getString(Router.EXTRA_LAST_ACCESSED_ID));
     }
 
+    protected void restore(Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            courseData = (EnrolledCoursesResponse) savedInstanceState.getSerializable(Router.EXTRA_ENROLLMENT);
+            courseComponentId = savedInstanceState.getString(Router.EXTRA_COURSE_COMPONENT_ID);
+        }
+    }
+
     @Override
-    public void onResume(){
+    public void onResume() {
         super.onResume();
         //check if mode is changed
-        if ( adapter != null ){
+        if (adapter != null) {
             boolean listRebuilt = adapter.checkModeChange();
-            if ( !listRebuilt ){
+            if (!listRebuilt) {
                 adapter.notifyDataSetChanged();
             }
         }
     }
 
-    public void setTaskProcessCallback(TaskProcessCallback callback){
+    public void setTaskProcessCallback(TaskProcessCallback callback) {
         this.taskProcessCallback = callback;
     }
 
-    protected CourseComponent getCourseComponent(){
+    protected CourseComponent getCourseComponent() {
         return courseManager.getComponentById(courseData.getCourse().getId(), courseComponentId);
     }
 
     //Loading data to the Adapter
     private void loadData(final View view) {
-        if ( courseData == null )
+        if (courseData == null)
             return;
         CourseComponent courseComponent = getCourseComponent();
         adapter.setData(courseComponent);
         updateMessageView(view);
     }
-    public void updateMessageView(View view){
-        if (view == null )
+
+    public void updateMessageView(View view) {
+        if (view == null)
             view = getView();
-        if ( view == null )
+        if (view == null)
             return;
         TextView messageView = (TextView) view.findViewById(R.id.no_chapter_tv);
-        if(adapter.getCount()==0){
+        if (adapter.getCount() == 0) {
             messageView.setVisibility(View.VISIBLE);
-            if ( adapter.hasFilteredUnits() ){
+            if (adapter.hasFilteredUnits()) {
                 Context context = getActivity();
                 Drawable modeSwitcherDrawable =
                         new IconDrawable(context, FontAwesomeIcons.fa_list)
-                        .colorRes(context, R.color.edx_grayscale_neutral_light)
-                        .sizeRes(context, R.dimen.content_unavailable_error_icon_size);
+                                .colorRes(context, R.color.edx_grayscale_neutral_light)
+                                .sizeRes(context, R.dimen.content_unavailable_error_icon_size);
                 messageView.setCompoundDrawablesWithIntrinsicBounds(
                         null, modeSwitcherDrawable, null, null);
                 Resources resources = getResources();
@@ -164,7 +172,7 @@ public class CourseOutlineFragment extends BaseFragment {
                 messageView.setText(R.string.no_chapter_text);
                 messageView.setContentDescription(null);
             }
-        }else{
+        } else {
             messageView.setVisibility(View.GONE);
         }
     }
@@ -199,29 +207,21 @@ public class CourseOutlineFragment extends BaseFragment {
         }
     }
 
-    private void restore(Bundle savedInstanceState) {
-        if (savedInstanceState != null) {
-            courseData = (EnrolledCoursesResponse) savedInstanceState.getSerializable(Router.EXTRA_ENROLLMENT);
-            courseComponentId = (String) savedInstanceState.getString(Router.EXTRA_COURSE_COMPONENT_ID);
-        }
-    }
-
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        if ( courseData != null)
+        if (courseData != null)
             outState.putSerializable(Router.EXTRA_ENROLLMENT, courseData);
-        if ( courseComponentId != null )
+        if (courseComponentId != null)
             outState.putString(Router.EXTRA_COURSE_COMPONENT_ID, courseComponentId);
     }
 
-    public void reloadList(){
-        if ( adapter != null ){
-            adapter.reloadData();
+    public void reloadList() {
+        if (adapter != null) {
         }
     }
 
-    private void updateRowSelection(String lastAccessedId){
+    private void updateRowSelection(String lastAccessedId) {
         if (!TextUtils.isEmpty(lastAccessedId)) {
             final int selectedItemPosition = adapter.getPositionByItemId(lastAccessedId);
             if (selectedItemPosition != -1) {

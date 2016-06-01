@@ -99,9 +99,9 @@ public class VideoListFragment extends BaseFragment {
 
         Intent extraIntent = getActivity().getIntent();
         if(extraIntent!=null){
-            if (extraIntent.hasExtra("FromMyVideos")) {
+            if (extraIntent.hasExtra(Router.EXTRA_FROM_MY_VIDEOS)) {
                 myVideosFlag = extraIntent.getBooleanExtra(
-                        "FromMyVideos", false);
+                        Router.EXTRA_FROM_MY_VIDEOS, false);
             }
 
             // read incoming chapter name
