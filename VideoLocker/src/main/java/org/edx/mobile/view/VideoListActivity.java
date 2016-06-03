@@ -254,14 +254,12 @@ public class VideoListActivity extends BaseVideosDownloadStateActivity
         checkBox.setOnCheckedChangeListener(null);
         checkBox.setChecked(true);
         checkBox.setOnCheckedChangeListener(checklistener);
-        checkBox.setButtonDrawable(R.drawable.ic_checkbox_active);
     }
 
     public void unsetCheckBoxSelected() {
         checkBox.setOnCheckedChangeListener(null);
         checkBox.setChecked(false);
         checkBox.setOnCheckedChangeListener(checklistener);
-        checkBox.setButtonDrawable(R.drawable.ic_checkbox_default);
     }
 
     @Override
@@ -329,10 +327,8 @@ public class VideoListActivity extends BaseVideosDownloadStateActivity
 
             if (isChecked) {
                 listFragment.setAllVideosChecked();
-                checkBox.setButtonDrawable(R.drawable.ic_checkbox_active);
             } else {
                 listFragment.unsetAllVideosChecked();
-                checkBox.setButtonDrawable(R.drawable.ic_checkbox_default);
             }
         }
     }
