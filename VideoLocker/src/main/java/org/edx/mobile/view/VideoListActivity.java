@@ -35,7 +35,7 @@ public class VideoListActivity extends BaseVideosDownloadStateActivity
 
     private boolean myVideosFlag;
     private CheckBox checkBox;
-    private CourseVideoCheckBoxListener checklistener;
+    private MenuCheckBoxListener checklistener;
     private PlayerFragment playerFragment;
     private VideoListFragment listFragment;
     private final Handler playHandler = new Handler();
@@ -251,14 +251,10 @@ public class VideoListActivity extends BaseVideosDownloadStateActivity
     }
 
     public void setCheckBoxSelected() {
-        try {
-            checkBox.setOnCheckedChangeListener(null);
-            checkBox.setChecked(true);
-            checkBox.setOnCheckedChangeListener(checklistener);
-            checkBox.setButtonDrawable(R.drawable.ic_checkbox_active);
-        } catch (Exception ex) {
-            logger.error(ex);
-        }
+        checkBox.setOnCheckedChangeListener(null);
+        checkBox.setChecked(true);
+        checkBox.setOnCheckedChangeListener(checklistener);
+        checkBox.setButtonDrawable(R.drawable.ic_checkbox_active);
     }
 
     public void unsetCheckBoxSelected() {
@@ -321,7 +317,7 @@ public class VideoListActivity extends BaseVideosDownloadStateActivity
         }
     }
 
-    private class CourseVideoCheckBoxListener implements OnCheckedChangeListener {
+    private class MenuCheckBoxListener implements OnCheckedChangeListener {
         private boolean lastIsChecked = false;
 
         @Override
@@ -350,13 +346,13 @@ public class VideoListActivity extends BaseVideosDownloadStateActivity
         checkBox = (CheckBox) checkBoxView.findViewById(R.id.select_checkbox);
 
         if (checklistener == null) {
-            checklistener = new CourseVideoCheckBoxListener();
+            checklistener = new MenuCheckBoxListener();
         }
 
         if (AppConstants.myVideosDeleteMode) {
             checkBox_menuItem.setVisible(true);
             checkBox.setVisibility(View.VISIBLE);
-            checkBox.setTextColor(getResources().getColor(R.color.white));
+            checkBox.setOnCheckedChangeListener(checklistener);
         } else {
             checkBox_menuItem.setVisible(false);
             checkBox.setVisibility(View.GONE);
@@ -435,9 +431,6 @@ public class VideoListActivity extends BaseVideosDownloadStateActivity
         }
         finish();
     }
-
-    ;
-
 
     @Override
     public boolean showInfoMessage(String message) {

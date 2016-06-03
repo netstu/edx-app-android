@@ -1110,7 +1110,6 @@ public class VideoListFragment extends BaseFragment {
 
     private void enableDeleteButton(){
         deleteButton.setEnabled(true);
-
     }
 
     public void playNext() {

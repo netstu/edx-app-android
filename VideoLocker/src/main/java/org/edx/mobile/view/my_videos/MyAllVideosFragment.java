@@ -54,6 +54,7 @@ public class MyAllVideosFragment extends BaseFragment {
         myCoursesAdaptor = new MyAllVideoCourseAdapter(getActivity(), environment) {
             @Override
             public void onItemClicked(EnrolledCoursesResponse model) {
+                // TODO Revisit this line, it's an odd way to set what state myVideos is in
                 AppConstants.myVideosDeleteMode = false;
 
                 Intent videoIntent = new Intent(getActivity(), VideoListActivity.class);
@@ -74,7 +75,7 @@ public class MyAllVideosFragment extends BaseFragment {
         addMyAllVideosData();
         myCoursesAdaptor.notifyDataSetChanged();
     }
-    
+
     @Override
     public void onStop() {
         super.onStop();
@@ -85,28 +86,30 @@ public class MyAllVideosFragment extends BaseFragment {
     }
 
     private void addMyAllVideosData() {
-        if (myCoursesAdaptor != null) {
+        if (myCoursesAdaptor == null) {
+            return;
+        } else {
             myCoursesAdaptor.clear();
+        }
 
-            if (getAllDownloadedVideosTask != null) {
-                getAllDownloadedVideosTask.cancel(true);
-            } else {
-                getAllDownloadedVideosTask = new GetAllDownloadedVideosTask(getActivity()) {
-
-                    @Override
-                    protected void onSuccess(List<EnrolledCoursesResponse> enrolledCoursesResponses) throws Exception {
-                        super.onSuccess(enrolledCoursesResponses);
-                        if (enrolledCoursesResponses != null) {
-                            for (EnrolledCoursesResponse m : enrolledCoursesResponses) {
-                                if (m.isIs_active()) {
-                                    myCoursesAdaptor.add(m);
-                                }
+        if (getAllDownloadedVideosTask != null) {
+            getAllDownloadedVideosTask.cancel(true);
+        } else {
+            getAllDownloadedVideosTask = new GetAllDownloadedVideosTask(getActivity()) {
+                @Override
+                protected void onSuccess(List<EnrolledCoursesResponse> enrolledCoursesResponses) throws Exception {
+                    super.onSuccess(enrolledCoursesResponses);
+                    if (enrolledCoursesResponses != null) {
+                        for (EnrolledCoursesResponse m : enrolledCoursesResponses) {
+                            if (m.isIs_active()) {
+                                myCoursesAdaptor.add(m);
                             }
                         }
                     }
-                };
-            }
-            getAllDownloadedVideosTask.execute();
+                }
+            };
         }
+        getAllDownloadedVideosTask.execute();
     }
+
 }
