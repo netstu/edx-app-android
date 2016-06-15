@@ -43,7 +43,6 @@ import com.joanzapata.iconify.IconDrawable;
 
 import org.edx.mobile.R;
 import org.edx.mobile.logger.Logger;
-import org.edx.mobile.module.prefs.PrefManager;
 
 import java.lang.ref.WeakReference;
 import java.util.Formatter;
@@ -80,15 +79,18 @@ import java.util.Locale;
 @SuppressLint("WrongViewCast")
 public class PlayerController extends FrameLayout {
 
-    private MediaPlayerControl  mPlayer;
+    public static final long    DEFAULT_TIMEOUT_MS = 3000L;
+
+    private long                mTimeoutMS = DEFAULT_TIMEOUT_MS;
+    private IPlayer             mPlayer;
     private Context             mContext;
     private ViewGroup           mAnchor;
     private View                mRoot;
     private ProgressBar         mProgress;
     private TextView            mEndTime, mCurrentTime;
     private boolean             mShowing;
+    private boolean             mPauseAccessibilityRequestQueued;
     private boolean             mDragging;
-    private static final int    sDefaultTimeout = 3000;
     private static final int    FADE_OUT = 1;
     private static final int    SHOW_PROGRESS = 2;
     private boolean             mUseFastForward;
@@ -106,7 +108,6 @@ public class PlayerController extends FrameLayout {
     private ImageButton         mLmsButton;
     private Handler             mHandler = new MessageHandler(this);
     private String              mTitle;
-    private String              shareURL;
     private TextView            mTitleTextView;
     private boolean             mIsAutoHide = true;
     private String              mLmsUrl;
@@ -120,7 +121,6 @@ public class PlayerController extends FrameLayout {
         mContext = context;
         mUseFastForward = true;
         mFromXml = true;
-
     }
 
     public PlayerController(Context context, boolean useFastForward) {
@@ -141,7 +141,7 @@ public class PlayerController extends FrameLayout {
             initControllerView(mRoot);
     }
 
-    public void setMediaPlayer(MediaPlayerControl player) {
+    public void setMediaPlayer(IPlayer player) {
         mPlayer = player;
         updatePausePlay();
         updateFullScreen();
@@ -244,52 +244,47 @@ public class PlayerController extends FrameLayout {
     }
 
     /**
-     * Show the controller on screen. It will go away
-     * automatically after 3 seconds of inactivity.
+     * @param timeoutMS The timeout in milliseconds that controls should be shown on screen,
+     *                  or 0 for no timeout
+     *                  The value will be applied to next call of show()
+     */
+    public void setShowTimeoutMS(long timeoutMS) {
+        if (timeoutMS <= 0L) {
+            timeoutMS = 0L;
+        }
+
+        mTimeoutMS = timeoutMS;
+    }
+
+    /**
+     * Resets value to DEFAULT_TIMEOUT_MS
+     */
+    public void resetShowTimeoutMS() {
+        mTimeoutMS = DEFAULT_TIMEOUT_MS;
+    }
+
+    /**
+     * Show the controller on screen. It will timeout according to setShowTimeoutMS().
+     * Use this as opposed to showSpecial() when you want the timeout to be consistent with
+     *  tapping the screen, activating a control, etc.
      */
     public void show() {
-        show(sDefaultTimeout);
+        show(mTimeoutMS);
     }
 
     /**
-     * Disable pause or seek buttons if the stream cannot be paused or seeked.
-     * This requires the control interface to be a MediaPlayerControlExt
+     * Show the controller for a specified timeout.
+     * Use this as opposed to show() when you want to show the controls for a time inconsistent with
+     *  tapping the screen, activating a control, etc
+     *
+     * @param timeoutMS The timeout to show controls for.
+     *                  Value of <= 0 means no timeout
      */
-    private void disableUnsupportedButtons() {
-        if (mPlayer == null) {
-            return;
-        }
-
-        try {
-            if (mPauseButton != null) {
-                if (!mPlayer.canPause()) {
-                    mPauseButton.setEnabled(false);
-                } else {
-                    mPauseButton.setEnabled(true);
-                }
-            } 
-            if (mRewButton != null) {
-                if (!mPlayer.canSeekBackward()) {
-                    mRewButton.setEnabled(false);
-                } else {
-                    mRewButton.setEnabled(true);
-                }
-            }
-        } catch (IncompatibleClassChangeError ex) {
-            // We were given an old version of the interface, that doesn't have
-            // the canPause/canSeekXYZ methods. This is OK, it just means we
-            // assume the media can be paused and seeked, and so we don't disable
-            // the buttons.
-        }
+    public void showSpecial(long timeoutMS) {
+        show(timeoutMS);
     }
 
-    /**
-     * Show the controller on screen. It will go away
-     * automatically after 'timeout' milliseconds of inactivity.
-     * @param timeout The timeout in milliseconds. Use 0 to show
-     * the controller until hide() is called.
-     */
-    public void show(int timeout) {
+    private void show(long timeoutMS) {
         if (!mShowing && mAnchor != null) {
             setProgress();
             if (mPauseButton != null) {
@@ -308,6 +303,7 @@ public class PlayerController extends FrameLayout {
         updatePausePlay();
         updateFullScreen();
         updateTitle();
+        setAccessibilityFocusPausePlay();
 
         // cause the progress bar to be updated even if mShowing
         // was already true.  This happens, for example, if we're
@@ -315,9 +311,43 @@ public class PlayerController extends FrameLayout {
         mHandler.sendEmptyMessage(SHOW_PROGRESS);
 
         Message msg = mHandler.obtainMessage(FADE_OUT);
-        if (timeout != 0) {
+        if (timeoutMS > 0L) {
             mHandler.removeMessages(FADE_OUT);
-            mHandler.sendMessageDelayed(msg, timeout);
+            mHandler.sendMessageDelayed(msg, timeoutMS);
+        }
+    }
+
+    /**
+     * Disable pause or seek buttons if the stream cannot be paused or seeked.
+     * This requires the control interface to be a MediaPlayerControlExt
+     */
+    private void disableUnsupportedButtons() {
+        if (mPlayer == null) {
+            return;
+        }
+
+        try {
+            if (mPauseButton != null) {
+                if (!mPlayer.canPause()) {
+                    mPauseButton.setEnabled(false);
+                } else {
+                    mPauseButton.setEnabled(true);
+                }
+
+                mPauseButton.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED);
+            } 
+            if (mRewButton != null) {
+                if (!mPlayer.canSeekBackward()) {
+                    mRewButton.setEnabled(false);
+                } else {
+                    mRewButton.setEnabled(true);
+                }
+            }
+        } catch (IncompatibleClassChangeError ex) {
+            // We were given an old version of the interface, that doesn't have
+            // the canPause/canSeekXYZ methods. This is OK, it just means we
+            // assume the media can be paused and seeked, and so we don't disable
+            // the buttons.
         }
     }
 
@@ -329,17 +359,33 @@ public class PlayerController extends FrameLayout {
      * Remove the controller from the screen.
      */
     public void hide() {
-        if (mAnchor == null) {
-            return;
-        }
+        if (mAnchor!= null && mShowing) {
 
-        try {
             mAnchor.removeView(this);
             mHandler.removeMessages(SHOW_PROGRESS);
-        } catch (IllegalArgumentException ex) {
-            logger.warn("MediaController already removed");
+
+            mShowing = false;
         }
-        mShowing = false;
+    }
+
+    /**
+     * Puts accessibility focus on pause/play button.
+     * If pause/play not showing, will put focus there next time it shows.
+     */
+    public void requestAccessibilityFocusPausePlay() {
+        if (mShowing && mAnchor != null) {
+            setAccessibilityFocusPausePlay();
+        }
+        else {
+            mPauseAccessibilityRequestQueued = true;
+        }
+    }
+
+    private void setAccessibilityFocusPausePlay() {
+        if (mPauseButton != null) {
+            mPauseButton.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED);
+            mPauseAccessibilityRequestQueued = false;
+        }
     }
 
     private String stringForTime(int timeMs) {
@@ -384,14 +430,13 @@ public class PlayerController extends FrameLayout {
     
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-    //  super.onTouchEvent(event);
-        show(sDefaultTimeout);
+        show();
         return false;
     }
     
     @Override
     public boolean onTrackballEvent(MotionEvent ev) {
-        show(sDefaultTimeout);
+        show();
         return false;
     }
 
@@ -409,7 +454,7 @@ public class PlayerController extends FrameLayout {
                 || keyCode == KeyEvent.KEYCODE_SPACE) {
             if (uniqueDown) {
                 doPauseResume();
-                show(sDefaultTimeout);
+                show();
                 if (mPauseButton != null) {
                     mPauseButton.requestFocus();
                 }
@@ -419,7 +464,7 @@ public class PlayerController extends FrameLayout {
             if (uniqueDown && !mPlayer.isPlaying()) {
                 mPlayer.start();
                 updatePausePlay();
-                show(sDefaultTimeout);
+                show();
             }
             return true;
         } else if (keyCode == KeyEvent.KEYCODE_MEDIA_STOP
@@ -427,7 +472,7 @@ public class PlayerController extends FrameLayout {
             if (uniqueDown && mPlayer.isPlaying()) {
                 mPlayer.pause();
                 updatePausePlay();
-                show(sDefaultTimeout);
+                show();
             }
             return true;
         } else if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN
@@ -442,21 +487,21 @@ public class PlayerController extends FrameLayout {
             return true;
         }
 
-        show(sDefaultTimeout);
+        show();
         return super.dispatchKeyEvent(event);
     }
 
     private View.OnClickListener mPauseListener = new View.OnClickListener() {
         public void onClick(View v) {
             doPauseResume();
-            show(sDefaultTimeout);
+            show();
         }
     };
 
     private View.OnClickListener mFullscreenListener = new View.OnClickListener() {
         public void onClick(View v) {
             doToggleFullscreen();
-            show(sDefaultTimeout);
+            show();
         }
     };
 
@@ -595,7 +640,7 @@ public class PlayerController extends FrameLayout {
         long startPos = 0;
         long endPos = 0;
         public void onStartTrackingTouch(SeekBar bar) {
-            show(3600000);
+            show();
             mDragging = true;
 
             // By removing these pending progress messages we make sure
@@ -636,7 +681,7 @@ public class PlayerController extends FrameLayout {
             mDragging = false;
             setProgress();
             updatePausePlay();
-            show(sDefaultTimeout);
+            show();
 
             // Ensure that progress is properly updated in the future,
             // the call to show() does not guarantee this because it is a
@@ -711,7 +756,7 @@ public class PlayerController extends FrameLayout {
             mPlayer.seekTo(pos);
             setProgress();
 
-            show(sDefaultTimeout);
+            show();
 
             // callback this event
 //          if (mEventListener != null) {
@@ -763,31 +808,11 @@ public class PlayerController extends FrameLayout {
         }
     }
 
-    public interface MediaPlayerControl extends IPlayer {
-        /*
-        void    start();
-        void    pause();
-        int     getDuration();
-        int     getCurrentPosition();
-        void    seekTo(int pos);
-        boolean isPlaying();
-        int     getBufferPercentage();
-        boolean canPause();
-        boolean canSeekBackward();
-        boolean canSeekForward();
-        boolean isFullScreen();
-        void    toggleFullScreen();
-        void    callLMSServer(String lmsUrl);
-        void    callSettings(Point p);
-        void    callPlayerSeeked(long lastPos, long newPos, boolean isRewindClicked);
-        */
-    }
-
     private static class MessageHandler extends Handler {
         private final WeakReference<PlayerController> mView; 
 
         MessageHandler(PlayerController view) {
-            mView = new WeakReference<PlayerController>(view);
+            mView = new WeakReference<>(view);
         }
         @Override
         public void handleMessage(Message msg) {
@@ -831,12 +856,14 @@ public class PlayerController extends FrameLayout {
         this.mIsAutoHide = mIsAutoHide;
     }
 
+    @SuppressWarnings("unused")
     public void hideProgress() {
         if(this.mProgress!=null){
             this.mProgress.setVisibility(View.INVISIBLE);
         }
     }
 
+    @SuppressWarnings("unused")
     public void showProgress() {
         this.mProgress.setVisibility(View.VISIBLE);
     }
