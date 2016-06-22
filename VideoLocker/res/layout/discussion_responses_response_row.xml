@@ -24,7 +24,7 @@
             android:paddingBottom="3dp"
             android:paddingTop="@dimen/discussion_responses_box_padding">
 
-            <include layout="@layout/discussion_endorsed_text_view" />
+            <include layout="@layout/discussion_user_profile_row" />
 
             <TextView
                 android:id="@+id/discussion_responses_comment_body_text_view"
@@ -34,8 +34,6 @@
                 android:textColor="@color/edx_grayscale_neutral_dark"
                 android:textSize="@dimen/edx_x_small"
                 tools:text="This is a response" />
-
-            <include layout="@layout/discussion_author_layout" />
 
             <TextView
                 android:id="@+id/discussion_responses_answer_author_text_view"

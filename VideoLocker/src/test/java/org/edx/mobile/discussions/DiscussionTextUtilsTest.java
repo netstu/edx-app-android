@@ -44,36 +44,6 @@ public class DiscussionTextUtilsTest extends BaseTestCase {
         final String endorsePrefix = context.getString(R.string.discussion_post_endorsed);
         final String answerPrefix = context.getString(R.string.discussion_post_marked_as_answer);
 
-        // For post
-        assertSetAuthorAttributionText(textView,
-                DiscussionTextUtils.AuthorAttributionLabel.POST,
-                new StubAuthorData(author, label, creationDate), now,
-                relativeTime + " " + outputAuthor + " " + outputAuthorLbl);
-        assertSetAuthorAttributionText(textView,
-                DiscussionTextUtils.AuthorAttributionLabel.POST,
-                new StubAuthorData(null, label, creationDate), now,
-                relativeTime + " " + outputAuthorLbl);
-        assertSetAuthorAttributionText(textView,
-                DiscussionTextUtils.AuthorAttributionLabel.POST,
-                new StubAuthorData(author, null, creationDate), now,
-                relativeTime + " " + outputAuthor);
-        assertSetAuthorAttributionText(textView,
-                DiscussionTextUtils.AuthorAttributionLabel.POST,
-                new StubAuthorData(author, label, null), now,
-                outputAuthor + " " + outputAuthorLbl);
-        assertSetAuthorAttributionText(textView,
-                DiscussionTextUtils.AuthorAttributionLabel.POST,
-                new StubAuthorData(null, null, creationDate), now,
-                relativeTime);
-        assertSetAuthorAttributionText(textView,
-                DiscussionTextUtils.AuthorAttributionLabel.POST,
-                new StubAuthorData(author, null, null), now,
-                outputAuthor);
-        assertSetAuthorAttributionText(textView,
-                DiscussionTextUtils.AuthorAttributionLabel.POST,
-                new StubAuthorData(null, label, null), now,
-                outputAuthorLbl);
-
         // For endorsed
         assertSetAuthorAttributionText(textView,
                 DiscussionTextUtils.AuthorAttributionLabel.ENDORSEMENT,

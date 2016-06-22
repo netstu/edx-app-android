@@ -6,6 +6,9 @@ import android.support.annotation.NonNull;
 import org.edx.mobile.discussion.DiscussionComment;
 import org.edx.mobile.model.Page;
 
+import java.util.Collections;
+import java.util.List;
+
 public abstract class GetResponsesListTask extends Task<Page<DiscussionComment>> {
 
     @NonNull
@@ -24,10 +27,11 @@ public abstract class GetResponsesListTask extends Task<Page<DiscussionComment>>
     }
 
     public Page<DiscussionComment> call() throws Exception {
+        List<String> requestedFields = Collections.singletonList("profile_image");
         if (isQuestionType) {
             return environment.getDiscussionAPI().getResponsesListForQuestion(threadId,
-                    page, shouldGetEndorsed);
+                    page, shouldGetEndorsed, requestedFields);
         }
-        return environment.getDiscussionAPI().getResponsesList(threadId, page);
+        return environment.getDiscussionAPI().getResponsesList(threadId, page, requestedFields);
     }
 }

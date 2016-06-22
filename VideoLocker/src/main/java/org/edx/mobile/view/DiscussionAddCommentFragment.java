@@ -25,7 +25,9 @@ import org.edx.mobile.discussion.DiscussionThread;
 import org.edx.mobile.logger.Logger;
 import org.edx.mobile.module.analytics.ISegment;
 import org.edx.mobile.task.CreateCommentTask;
+import org.edx.mobile.util.Config;
 import org.edx.mobile.util.SoftKeyboardUtil;
+import org.edx.mobile.view.view_holders.AuthorLayoutViewHolder;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -58,17 +60,14 @@ public class DiscussionAddCommentFragment extends BaseFragment {
     @InjectView(R.id.tvResponse)
     private TextView textViewResponse;
 
-    @InjectView(R.id.tvTimeAuthor)
-    private TextView textViewTimeAuthor;
-
-    @InjectView(R.id.discussion_responses_answer_text_view)
-    private TextView responseAnswerTextView;
-
     @Inject
     private Router router;
 
     @Inject
-    ISegment segIO;
+    private ISegment segIO;
+
+    @Inject
+    private Config config;
 
     private CreateCommentTask createCommentTask;
 
@@ -94,15 +93,20 @@ public class DiscussionAddCommentFragment extends BaseFragment {
         super.onViewCreated(view, savedInstanceState);
 
         textViewResponse.setText(Html.fromHtml(discussionResponse.getRenderedBody()));
-        DiscussionTextUtils.setEndorsedState(responseAnswerTextView, discussionThread, discussionResponse);
-        DiscussionTextUtils.setAuthorAttributionText(textViewTimeAuthor,
-                DiscussionTextUtils.AuthorAttributionLabel.POST,
-                discussionResponse,new Runnable() {
+
+        AuthorLayoutViewHolder authorLayoutViewHolder =
+                new AuthorLayoutViewHolder(getView().findViewById(R.id.discussion_user_profile_row));
+        authorLayoutViewHolder.populateViewHolder(config, discussionResponse, discussionResponse,
+                System.currentTimeMillis(),
+                new Runnable() {
                     @Override
                     public void run() {
                         router.showUserProfile(getActivity(), discussionResponse.getAuthor());
                     }
                 });
+        DiscussionTextUtils.setEndorsedState(authorLayoutViewHolder.answerTextView,
+                discussionThread, discussionResponse);
+
         buttonAddComment.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 createComment();

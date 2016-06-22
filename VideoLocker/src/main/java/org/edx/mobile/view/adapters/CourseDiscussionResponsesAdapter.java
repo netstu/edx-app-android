@@ -11,10 +11,10 @@ import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.google.inject.Inject;
 import com.joanzapata.iconify.Icon;
 import com.joanzapata.iconify.IconDrawable;
 import com.joanzapata.iconify.fonts.FontAwesomeIcons;
-import com.joanzapata.iconify.widget.IconImageView;
 
 import org.edx.mobile.R;
 import org.edx.mobile.discussion.DiscussionComment;
@@ -26,6 +26,7 @@ import org.edx.mobile.task.SetCommentVotedTask;
 import org.edx.mobile.task.SetThreadFlaggedTask;
 import org.edx.mobile.task.SetThreadFollowedTask;
 import org.edx.mobile.task.SetThreadVotedTask;
+import org.edx.mobile.util.Config;
 import org.edx.mobile.util.ResourceUtil;
 import org.edx.mobile.util.UiUtil;
 import org.edx.mobile.view.view_holders.AuthorLayoutViewHolder;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.ListIterator;
 
 import de.greenrobot.event.EventBus;
+import roboguice.RoboGuice;
 
 public class CourseDiscussionResponsesAdapter extends RecyclerView.Adapter implements InfiniteScrollUtils.ListContentController<DiscussionComment> {
 
@@ -47,6 +49,9 @@ public class CourseDiscussionResponsesAdapter extends RecyclerView.Adapter imple
 
         void onClickViewComments(@NonNull DiscussionComment comment);
     }
+
+    @Inject
+    private Config config;
 
     @NonNull
     private final Context context;
@@ -73,6 +78,7 @@ public class CourseDiscussionResponsesAdapter extends RecyclerView.Adapter imple
         this.context = context;
         this.discussionThread = discussionThread;
         this.listener = listener;
+        RoboGuice.getInjector(context).injectMembers(this);
     }
 
     @Override
@@ -131,6 +137,15 @@ public class CourseDiscussionResponsesAdapter extends RecyclerView.Adapter imple
     }
 
     private void bindViewHolderToThreadRow(DiscussionThreadViewHolder holder) {
+        holder.authorLayoutViewHolder.populateViewHolder(config, discussionThread,
+                discussionThread, initialTimeStampMs,
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        listener.onClickAuthor(discussionThread.getAuthor());
+                    }
+                });
+
         holder.threadTitleTextView.setText(discussionThread.getTitle());
 
         holder.threadBodyTextView.setText(DiscussionTextUtils.parseHtml(discussionThread.getRenderedBody()));
@@ -144,20 +159,8 @@ public class CourseDiscussionResponsesAdapter extends RecyclerView.Adapter imple
                     "cohort", groupName));
         }
 
-        holder.threadClosedIconImageView.setVisibility(discussionThread.isClosed() ? View.VISIBLE : View.GONE);
-        holder.threadPinnedIconImageView.setVisibility(discussionThread.isPinned() ? View.VISIBLE : View.GONE);
-
         bindSocialView(holder.socialLayoutViewHolder, discussionThread);
-        DiscussionTextUtils.setAuthorAttributionText(
-                holder.authorLayoutViewHolder.discussionAuthorTextView,
-                DiscussionTextUtils.AuthorAttributionLabel.POST,
-                discussionThread, initialTimeStampMs,
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onClickAuthor(discussionThread.getAuthor());
-                    }
-                });
+
         bindNumberResponsesView(holder.numberResponsesViewHolder);
 
         holder.discussionReportViewHolder.reportLayout.setOnClickListener(new View.OnClickListener() {
@@ -233,6 +236,46 @@ public class CourseDiscussionResponsesAdapter extends RecyclerView.Adapter imple
     private void bindViewHolderToResponseRow(DiscussionResponseViewHolder holder, final int position) {
         final DiscussionComment comment = discussionResponses.get(position - 1); // Subtract 1 for the discussion thread row at position 0
 
+        holder.authorLayoutViewHolder.populateViewHolder(config, comment,
+                comment, initialTimeStampMs,
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        listener.onClickAuthor(comment.getAuthor());
+                    }
+                });
+
+        if (comment.isEndorsed()) {
+            holder.authorLayoutViewHolder.answerTextView.setVisibility(View.VISIBLE);
+            holder.responseAnswerAuthorTextView.setVisibility(View.VISIBLE);
+            DiscussionThread.ThreadType threadType = discussionThread.getType();
+            DiscussionTextUtils.AuthorAttributionLabel authorAttributionLabel;
+            @StringRes int endorsementTypeStringRes;
+            switch (threadType) {
+                case QUESTION:
+                    authorAttributionLabel = DiscussionTextUtils.AuthorAttributionLabel.ANSWER;
+                    endorsementTypeStringRes = R.string.discussion_responses_answer;
+                    break;
+                case DISCUSSION:
+                default:
+                    authorAttributionLabel = DiscussionTextUtils.AuthorAttributionLabel.ENDORSEMENT;
+                    endorsementTypeStringRes = R.string.discussion_responses_endorsed;
+                    break;
+            }
+            holder.authorLayoutViewHolder.answerTextView.setText(endorsementTypeStringRes);
+            DiscussionTextUtils.setAuthorAttributionText(holder.responseAnswerAuthorTextView,
+                    authorAttributionLabel, comment.getEndorserData(), initialTimeStampMs,
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            listener.onClickAuthor(comment.getEndorsedBy());
+                        }
+                    });
+        } else {
+            holder.authorLayoutViewHolder.answerTextView.setVisibility(View.GONE);
+            holder.responseAnswerAuthorTextView.setVisibility(View.GONE);
+        }
+
         holder.responseCommentBodyTextView.setText(DiscussionTextUtils.parseHtml(comment.getRenderedBody()));
 
         if (discussionThread.isClosed() && comment.getChildCount() == 0) {
@@ -251,15 +294,6 @@ public class CourseDiscussionResponsesAdapter extends RecyclerView.Adapter imple
             });
         }
 
-        DiscussionTextUtils.setAuthorAttributionText(
-                holder.authorLayoutViewHolder.discussionAuthorTextView,
-                DiscussionTextUtils.AuthorAttributionLabel.POST,
-                comment, initialTimeStampMs, new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onClickAuthor(comment.getAuthor());
-                    }
-                });
         bindNumberCommentsView(holder.numberResponsesViewHolder, comment);
         bindSocialView(holder.socialLayoutViewHolder, position, comment);
 
@@ -280,37 +314,6 @@ public class CourseDiscussionResponsesAdapter extends RecyclerView.Adapter imple
         holder.discussionReportViewHolder.setReported(comment.isAbuseFlagged());
 
         holder.socialLayoutViewHolder.threadFollowContainer.setVisibility(View.INVISIBLE);
-
-        if (comment.isEndorsed()) {
-            holder.responseAnswerTextView.setVisibility(View.VISIBLE);
-            holder.responseAnswerAuthorTextView.setVisibility(View.VISIBLE);
-            DiscussionThread.ThreadType threadType = discussionThread.getType();
-            DiscussionTextUtils.AuthorAttributionLabel authorAttributionLabel;
-            @StringRes int endorsementTypeStringRes;
-            switch (threadType) {
-                case QUESTION:
-                    authorAttributionLabel = DiscussionTextUtils.AuthorAttributionLabel.ANSWER;
-                    endorsementTypeStringRes = R.string.discussion_responses_answer;
-                    break;
-                case DISCUSSION:
-                default:
-                    authorAttributionLabel = DiscussionTextUtils.AuthorAttributionLabel.ENDORSEMENT;
-                    endorsementTypeStringRes = R.string.discussion_responses_endorsed;
-                    break;
-            }
-            holder.responseAnswerTextView.setText(endorsementTypeStringRes);
-            DiscussionTextUtils.setAuthorAttributionText(holder.responseAnswerAuthorTextView,
-                    authorAttributionLabel, comment.getEndorserData(), initialTimeStampMs,
-                    new Runnable() {
-                        @Override
-                        public void run() {
-                            listener.onClickAuthor(comment.getEndorsedBy());
-                        }
-                    });
-        } else {
-            holder.responseAnswerTextView.setVisibility(View.GONE);
-            holder.responseAnswerAuthorTextView.setVisibility(View.GONE);
-        }
     }
 
     private void bindSocialView(DiscussionSocialLayoutViewHolder holder, final int position, final DiscussionComment response) {
@@ -436,8 +439,6 @@ public class CourseDiscussionResponsesAdapter extends RecyclerView.Adapter imple
         TextView threadTitleTextView;
         TextView threadBodyTextView;
         TextView threadVisibilityTextView;
-        IconImageView threadClosedIconImageView;
-        IconImageView threadPinnedIconImageView;
 
         AuthorLayoutViewHolder authorLayoutViewHolder;
         NumberResponsesViewHolder numberResponsesViewHolder;
@@ -453,12 +454,8 @@ public class CourseDiscussionResponsesAdapter extends RecyclerView.Adapter imple
                     findViewById(R.id.discussion_responses_thread_row_body_text_view);
             threadVisibilityTextView = (TextView) itemView.
                     findViewById(R.id.discussion_responses_thread_row_visibility_text_view);
-            threadClosedIconImageView = (IconImageView) itemView.
-                    findViewById(R.id.discussion_responses_thread_closed_icon_view);
-            threadPinnedIconImageView = (IconImageView) itemView.
-                    findViewById(R.id.discussion_responses_thread_row_pinned_icon_view);
 
-            authorLayoutViewHolder = new AuthorLayoutViewHolder(itemView);
+            authorLayoutViewHolder = new AuthorLayoutViewHolder(itemView.findViewById(R.id.discussion_user_profile_row));
             numberResponsesViewHolder = new NumberResponsesViewHolder(itemView);
             socialLayoutViewHolder = new DiscussionSocialLayoutViewHolder(itemView);
             discussionReportViewHolder = new DiscussionReportViewHolder(itemView);
@@ -467,9 +464,9 @@ public class CourseDiscussionResponsesAdapter extends RecyclerView.Adapter imple
 
     public static class DiscussionResponseViewHolder extends RecyclerView.ViewHolder {
         RelativeLayout addCommentLayout;
-        TextView responseAnswerTextView;
         TextView responseCommentBodyTextView;
         TextView responseAnswerAuthorTextView;
+
         AuthorLayoutViewHolder authorLayoutViewHolder;
         NumberResponsesViewHolder numberResponsesViewHolder;
         DiscussionSocialLayoutViewHolder socialLayoutViewHolder;
@@ -479,21 +476,12 @@ public class CourseDiscussionResponsesAdapter extends RecyclerView.Adapter imple
             super(itemView);
 
             addCommentLayout = (RelativeLayout) itemView.findViewById(R.id.discussion_responses_comment_relative_layout);
-            responseAnswerTextView = (TextView) itemView.findViewById(R.id.discussion_responses_answer_text_view);
             responseCommentBodyTextView = (TextView) itemView.findViewById(R.id.discussion_responses_comment_body_text_view);
             responseAnswerAuthorTextView = (TextView) itemView.findViewById(R.id.discussion_responses_answer_author_text_view);
-            authorLayoutViewHolder = new AuthorLayoutViewHolder(itemView);
+            authorLayoutViewHolder = new AuthorLayoutViewHolder(itemView.findViewById(R.id.discussion_user_profile_row));
             numberResponsesViewHolder = new NumberResponsesViewHolder(itemView);
             socialLayoutViewHolder = new DiscussionSocialLayoutViewHolder(itemView);
             discussionReportViewHolder = new DiscussionReportViewHolder(itemView);
-
-            final Context context = responseAnswerTextView.getContext();
-            TextViewCompat.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                    responseAnswerTextView,
-                    new IconDrawable(context, FontAwesomeIcons.fa_check_square_o)
-                            .sizeRes(context, R.dimen.edx_xxx_small)
-                            .colorRes(context, R.color.edx_utility_success),
-                    null, null, null);
         }
     }
 }

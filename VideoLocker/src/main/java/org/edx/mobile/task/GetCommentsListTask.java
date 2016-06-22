@@ -6,6 +6,9 @@ import android.support.annotation.NonNull;
 import org.edx.mobile.discussion.DiscussionComment;
 import org.edx.mobile.model.Page;
 
+import java.util.Collections;
+import java.util.List;
+
 public abstract class GetCommentsListTask extends Task<Page<DiscussionComment>> {
 
     private static final int PAGE_SIZE = 20;
@@ -21,6 +24,8 @@ public abstract class GetCommentsListTask extends Task<Page<DiscussionComment>> 
     }
 
     public Page<DiscussionComment> call() throws Exception {
-        return environment.getDiscussionAPI().getCommentsList(responseId, PAGE_SIZE, page);
+        List<String> requestedFields = Collections.singletonList("profile_image");
+        return environment.getDiscussionAPI().getCommentsList(responseId, PAGE_SIZE, page,
+                requestedFields);
     }
 }

@@ -21,6 +21,8 @@
             android:paddingRight="@dimen/edx_margin"
             android:paddingTop="@dimen/widget_margin">
 
+            <include layout="@layout/discussion_user_profile_row" />
+
             <TextView
                 android:id="@+id/tvTitle"
                 android:layout_width="wrap_content"
@@ -37,14 +39,6 @@
                 android:textSize="@dimen/edx_small"
                 android:textColor="@color/edx_grayscale_neutral_dark"
                 tools:text="Post body" />
-
-            <TextView
-                style="@style/discussion_responses_small_text"
-                android:id="@+id/tvTimeAuthor"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/widget_margin"
-                tools:text="Author" />
 
         </LinearLayout>
 

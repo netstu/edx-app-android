@@ -16,13 +16,20 @@
 
 package org.edx.mobile.discussion;
 
+import android.support.annotation.Nullable;
+
 import com.google.gson.annotations.SerializedName;
+
+import org.edx.mobile.user.DiscussionUser;
+import org.edx.mobile.user.ProfileImage;
+import org.edx.mobile.view.view_holders.AuthorLayoutViewHolder;
 
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
-public class DiscussionComment implements Serializable, IAuthorData {
+public class DiscussionComment implements Serializable, IAuthorData, AuthorLayoutViewHolder.ProfileImageProvider {
     private @SerializedName("id") String identifier;
     private String parentId;
     private String threadId;
@@ -41,6 +48,8 @@ public class DiscussionComment implements Serializable, IAuthorData {
     private boolean abuseFlagged = false;
     private List<String> editableFields;
     private int childCount = 0;
+    @Nullable
+    private Map<String, DiscussionUser> users;
 
     public String getIdentifier() {
         return identifier;
@@ -85,7 +94,7 @@ public class DiscussionComment implements Serializable, IAuthorData {
     public Date getUpdatedAt() {
         return updatedAt;
     }
-    
+
     public boolean isEndorsed() {
         return endorsed;
     }
@@ -151,5 +160,24 @@ public class DiscussionComment implements Serializable, IAuthorData {
     public boolean isAuthorAnonymous() {
         // because a comment or a response cannot be posted anonymously
         return false;
+    }
+
+    @Nullable
+    public Map<String, DiscussionUser> getUsers() {
+        return users;
+    }
+
+    public void setUsers(@Nullable Map<String, DiscussionUser> users) {
+        this.users = users;
+    }
+
+    @Nullable
+    @Override
+    public ProfileImage getProfileImage() {
+        if (users == null) {
+            return null;
+        } else {
+            return users.get(author).getProfile().getImage();
+        }
     }
 }

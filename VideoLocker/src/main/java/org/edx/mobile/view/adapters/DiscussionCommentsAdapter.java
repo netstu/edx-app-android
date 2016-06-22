@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.google.inject.Inject;
 import com.joanzapata.iconify.IconDrawable;
 import com.joanzapata.iconify.fonts.FontAwesomeIcons;
 
@@ -17,11 +18,18 @@ import org.edx.mobile.R;
 import org.edx.mobile.discussion.DiscussionComment;
 import org.edx.mobile.discussion.DiscussionTextUtils;
 import org.edx.mobile.discussion.DiscussionThread;
+import org.edx.mobile.util.Config;
+import org.edx.mobile.view.view_holders.AuthorLayoutViewHolder;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import roboguice.RoboGuice;
+
 public class DiscussionCommentsAdapter extends RecyclerView.Adapter implements InfiniteScrollUtils.ListContentController<DiscussionComment> {
+
+    @Inject
+    private Config config;
 
     @NonNull
     private final Context context;
@@ -59,6 +67,7 @@ public class DiscussionCommentsAdapter extends RecyclerView.Adapter implements I
         this.listener = listener;
         this.thread = thread;
         this.response = response;
+        RoboGuice.getInjector(context).injectMembers(this);
     }
 
     @Override
@@ -79,7 +88,8 @@ public class DiscussionCommentsAdapter extends RecyclerView.Adapter implements I
         if (viewType == RowType.PROGRESS) {
             return new RecyclerView.ViewHolder(LayoutInflater.
                     from(parent.getContext()).
-                    inflate(R.layout.list_view_footer_progress, parent, false)) {};
+                    inflate(R.layout.list_view_footer_progress, parent, false)) {
+            };
         }
 
         return new ViewHolder(LayoutInflater.
@@ -99,9 +109,9 @@ public class DiscussionCommentsAdapter extends RecyclerView.Adapter implements I
         final IconDrawable iconDrawable;
         final int standardMargin = context.getResources().getDimensionPixelOffset(R.dimen.discussion_responses_standard_margin);
         if (position == 0) {
-            holder.discussionCommentRow.setPadding(0, standardMargin, 0, 0);
             discussionComment = response;
-            DiscussionTextUtils.setEndorsedState(holder.responseAnswerTextView, thread, response);
+
+            DiscussionTextUtils.setEndorsedState(holder.authorLayoutViewHolder.answerTextView, thread, response);
             backgroundRes = R.drawable.row_discussion_first_comment_background;
             layoutParams.topMargin = context.getResources().getDimensionPixelOffset(R.dimen.discussion_responses_standard_margin);
             final int childCount = discussionComment.getChildCount();
@@ -114,8 +124,7 @@ public class DiscussionCommentsAdapter extends RecyclerView.Adapter implements I
             holder.discussionCommentCountReportTextView.setClickable(false);
 
         } else {
-            holder.responseAnswerTextView.setVisibility(View.GONE);
-            holder.discussionCommentRow.setPadding(standardMargin, standardMargin, standardMargin, 0);
+            holder.authorLayoutViewHolder.answerTextView.setVisibility(View.GONE);
 
             discussionComment = discussionComments.get(position - 1);
             if (!progressVisible && position == getItemCount() - 1) {
@@ -137,15 +146,8 @@ public class DiscussionCommentsAdapter extends RecyclerView.Adapter implements I
                 }
             });
         }
-        TextViewCompat.setCompoundDrawablesRelativeWithIntrinsicBounds(holder.discussionCommentCountReportTextView, iconDrawable, null, null, null);
-        holder.discussionCommentRow.setLayoutParams(layoutParams);
-        holder.discussionCommentRow.setBackgroundResource(backgroundRes);
 
-        String commentBody = discussionComment.getRawBody();
-        holder.discussionCommentBody.setText(commentBody);
-
-        DiscussionTextUtils.setAuthorAttributionText(holder.discussionCommentAuthorTextView,
-                DiscussionTextUtils.AuthorAttributionLabel.POST,
+        holder.authorLayoutViewHolder.populateViewHolder(config, discussionComment,
                 discussionComment, initialTimeStampMs,
                 new Runnable() {
                     @Override
@@ -153,6 +155,13 @@ public class DiscussionCommentsAdapter extends RecyclerView.Adapter implements I
                         listener.onClickAuthor(discussionComment.getAuthor());
                     }
                 });
+
+        TextViewCompat.setCompoundDrawablesRelativeWithIntrinsicBounds(holder.discussionCommentCountReportTextView, iconDrawable, null, null, null);
+        holder.discussionCommentRow.setLayoutParams(layoutParams);
+        holder.discussionCommentRow.setBackgroundResource(backgroundRes);
+
+        String commentBody = discussionComment.getRawBody();
+        holder.discussionCommentBody.setText(commentBody);
     }
 
     @Override
@@ -190,17 +199,16 @@ public class DiscussionCommentsAdapter extends RecyclerView.Adapter implements I
     private static class ViewHolder extends RecyclerView.ViewHolder {
         View discussionCommentRow;
         TextView discussionCommentBody;
-        TextView discussionCommentAuthorTextView;
         TextView discussionCommentCountReportTextView;
-        TextView responseAnswerTextView;
+
+        AuthorLayoutViewHolder authorLayoutViewHolder;
 
         public ViewHolder(View itemView) {
             super(itemView);
             discussionCommentRow = itemView.findViewById(R.id.row_discussion_comment_layout);
             discussionCommentBody = (TextView) itemView.findViewById(R.id.discussion_comment_body);
-            discussionCommentAuthorTextView = (TextView) itemView.findViewById(R.id.discussion_comment_author_text_view);
             discussionCommentCountReportTextView = (TextView) itemView.findViewById(R.id.discussion_comment_count_report_text_view);
-            responseAnswerTextView = (TextView) itemView.findViewById(R.id.discussion_responses_answer_text_view);
+            authorLayoutViewHolder = new AuthorLayoutViewHolder(itemView.findViewById(R.id.discussion_user_profile_row));
         }
     }
 

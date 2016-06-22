@@ -6,6 +6,9 @@ import android.support.annotation.NonNull;
 import org.edx.mobile.discussion.DiscussionThread;
 import org.edx.mobile.model.Page;
 
+import java.util.Collections;
+import java.util.List;
+
 public abstract class SearchThreadListTask extends
         Task<Page<DiscussionThread>> {
 
@@ -24,6 +27,8 @@ public abstract class SearchThreadListTask extends
     }
 
     public Page<DiscussionThread> call() throws Exception {
-        return environment.getDiscussionAPI().searchThreadList(courseId, text, page);
+        List<String> requestedFields = Collections.singletonList("profile_image");
+        return environment.getDiscussionAPI().searchThreadList(courseId, text, page,
+                requestedFields);
     }
 }

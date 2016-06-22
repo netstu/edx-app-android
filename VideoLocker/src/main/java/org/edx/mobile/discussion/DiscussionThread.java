@@ -17,21 +17,27 @@
 package org.edx.mobile.discussion;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
+
+import org.edx.mobile.user.DiscussionUser;
+import org.edx.mobile.user.ProfileImage;
+import org.edx.mobile.view.view_holders.AuthorLayoutViewHolder;
 
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
-public class DiscussionThread implements Serializable, IAuthorData {
+public class DiscussionThread implements Serializable, IAuthorData, AuthorLayoutViewHolder.ProfileImageProvider {
 
     public enum ThreadType {
         @SerializedName("discussion")
-        DISCUSSION (0),
+        DISCUSSION(0),
 
         @SerializedName("question")
-        QUESTION (1);
+        QUESTION(1);
 
         private final int value;
 
@@ -73,6 +79,8 @@ public class DiscussionThread implements Serializable, IAuthorData {
     private Date updatedAt;
     private List<String> editableFields;
     private boolean read = false;
+    @Nullable
+    private Map<String, DiscussionUser> users;
 
     public String getIdentifier() {
         return identifier;
@@ -216,5 +224,24 @@ public class DiscussionThread implements Serializable, IAuthorData {
     @Override
     public boolean isAuthorAnonymous() {
         return author == null || author.isEmpty();
+    }
+
+    @Nullable
+    public Map<String, DiscussionUser> getUsers() {
+        return users;
+    }
+
+    public void setUsers(@Nullable Map<String, DiscussionUser> users) {
+        this.users = users;
+    }
+
+    @Nullable
+    @Override
+    public ProfileImage getProfileImage() {
+        if (users == null) {
+            return null;
+        } else {
+            return users.get(author).getProfile().getImage();
+        }
     }
 }
