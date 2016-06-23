@@ -6,7 +6,6 @@ import android.content.Context;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.edx.mobile.model.VideoModel;
 import org.edx.mobile.model.api.ProfileModel;
 import org.edx.mobile.model.db.DownloadEntry.DownloadedState;
@@ -15,6 +14,7 @@ import org.edx.mobile.module.db.DataCallback;
 import org.edx.mobile.module.db.DbStructure;
 import org.edx.mobile.module.db.IDatabase;
 import org.edx.mobile.module.prefs.UserPrefs;
+import org.edx.mobile.third_party.lang.ArrayUtils;
 
 import java.util.List;
 

@@ -6,15 +6,15 @@ import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.support.v4.util.ArrayMap;
 
-import org.apache.commons.lang3.BooleanUtils;
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.time.FastDateFormat;
 import org.edx.mobile.R;
+import org.edx.mobile.third_party.lang.BooleanUtils;
+import org.edx.mobile.third_party.lang.ObjectUtils;
 import org.edx.mobile.third_party.versioning.ArtifactVersion;
 import org.edx.mobile.util.ResourceUtil;
 
 import java.text.DateFormat;
 import java.text.Format;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 
@@ -56,8 +56,7 @@ public class NewVersionAvailableEvent implements Comparable<NewVersionAvailableE
         }
     }
 
-    // Use FastDateFormat because it's thread-safe and caches instances.
-    private static final Format dateFormat = FastDateFormat.getDateInstance(DateFormat.DEFAULT);
+    private static final Format dateFormat = SimpleDateFormat.getDateInstance(DateFormat.DEFAULT);
 
     @Nullable
     private final ArtifactVersion newVersion;
@@ -136,7 +135,11 @@ public class NewVersionAvailableEvent implements Comparable<NewVersionAvailableE
             notificationStringRes = R.string.app_version_outdated;
         } else {
             notificationStringRes = R.string.app_version_deprecated;
-            phraseMapping.put("last_supported_date", dateFormat.format(lastSupportedDate));
+            final String formattedDate;
+            synchronized (dateFormat) {
+                formattedDate = dateFormat.format(lastSupportedDate);
+            }
+            phraseMapping.put("last_supported_date", formattedDate);
         }
         return ResourceUtil.getFormattedString(context.getResources(),
                 notificationStringRes, phraseMapping);

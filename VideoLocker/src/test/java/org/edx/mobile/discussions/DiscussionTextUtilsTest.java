@@ -8,12 +8,12 @@ import android.text.style.StyleSpan;
 import android.view.View;
 import android.widget.TextView;
 
-import org.apache.commons.lang.time.DateUtils;
 import org.edx.mobile.R;
 import org.edx.mobile.discussion.DiscussionTextUtils;
 import org.edx.mobile.discussion.IAuthorData;
 import org.edx.mobile.test.BaseTestCase;
 import org.edx.mobile.test.util.TimeUtilsForTests;
+import org.edx.mobile.test.util.third_party.time.DateUtils;
 import org.edx.mobile.util.ResourceUtil;
 import org.junit.Test;
 import org.mockito.Mockito;
