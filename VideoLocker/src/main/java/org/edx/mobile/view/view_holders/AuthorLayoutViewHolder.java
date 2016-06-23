@@ -10,14 +10,19 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.google.inject.Inject;
 import com.joanzapata.iconify.IconDrawable;
 import com.joanzapata.iconify.fonts.FontAwesomeIcons;
 
 import org.edx.mobile.R;
 import org.edx.mobile.discussion.DiscussionTextUtils;
 import org.edx.mobile.discussion.IAuthorData;
+import org.edx.mobile.model.api.ProfileModel;
+import org.edx.mobile.module.prefs.UserPrefs;
 import org.edx.mobile.user.ProfileImage;
 import org.edx.mobile.util.Config;
+
+import roboguice.RoboGuice;
 
 public class AuthorLayoutViewHolder {
 
@@ -25,6 +30,9 @@ public class AuthorLayoutViewHolder {
         @Nullable
         ProfileImage getProfileImage();
     }
+
+    @Inject
+    UserPrefs userPrefs;
 
     public final ViewGroup profileRow;
     public final ImageView profileImageView;
@@ -46,6 +54,7 @@ public class AuthorLayoutViewHolder {
                         .sizeRes(context, R.dimen.edx_xxx_small)
                         .colorRes(context, R.color.edx_utility_success),
                 null, null, null);
+        RoboGuice.getInjector(context).injectMembers(this);
     }
 
     public void populateViewHolder(@NonNull Config config, @NonNull IAuthorData authorData,
@@ -53,15 +62,34 @@ public class AuthorLayoutViewHolder {
                                    long initialTimeStampMs,
                                    @NonNull final Runnable listener) {
         final Context context = profileImageView.getContext();
-        if (provider.getProfileImage() != null) {
-            ProfileImage profileImage = provider.getProfileImage();
-            if (profileImage.hasImage()) {
+        final ProfileImage profileImage;
+        {
+            if (provider.getProfileImage() != null) {
+                profileImage = provider.getProfileImage();
+            } else {
+                // TODO: Remove this else block when MA-2542 is fixed.
+                /**
+                 * Background: Currently the POST & PUT APIs aren't configured to return a user's
+                 * {@link ProfileImage} in their response. Since, the currently logged-in user is
+                 * the only one that can POST using the app, so, we use the locally stored
+                 * {@link ProfileImage} in {@link UserPrefs} instead.
+                 * Incase of PUT we just use the previous {@link ProfileImage} version that we had.
+                 */
+                ProfileModel profileModel = userPrefs.getProfile();
+                if (profileModel != null && authorData.getAuthor().equals(profileModel.username)) {
+                    profileImage = userPrefs.getProfileImage();
+                } else {
+                    profileImage = null;
+                }
+            }
+            if (profileImage != null && profileImage.hasImage()) {
                 Glide.with(context).load(profileImage.getImageUrlMedium())
                         .into(profileImageView);
             } else {
                 profileImageView.setImageResource(R.drawable.xsie);
             }
         }
+
         DiscussionTextUtils.setAuthorText(authorTextView, authorData);
         if (authorData.getCreatedAt() != null) {
             CharSequence relativeTime = DiscussionTextUtils.getRelativeTimeSpanString(context,
