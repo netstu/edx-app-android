@@ -287,7 +287,7 @@ public class RestApiManager implements IApi{
         PrefManager pref = new PrefManager(context, PrefManager.Pref.LOGIN);
         String username = pref.getCurrentUserProfile().username;
 
-        String date = DateUtil.getModificationDate();
+        String date = DateUtil.getCurrentTimeStamp();
         EnrollmentRequestBody.LastAccessRequestBody body = new EnrollmentRequestBody.LastAccessRequestBody();
         body.last_visited_module_id = lastVisitedModuleId;
         body.modification_date = date;

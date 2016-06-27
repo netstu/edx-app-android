@@ -1,13 +1,12 @@
 package org.edx.mobile.http;
 
-import org.apache.commons.lang3.time.DateFormatUtils;
 import org.edx.mobile.BuildConfig;
 import org.edx.mobile.event.NewVersionAvailableEvent;
 import org.edx.mobile.third_party.versioning.ArtifactVersion;
 import org.edx.mobile.third_party.versioning.DefaultArtifactVersion;
+import org.edx.mobile.util.DateUtil;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.Date;
 
 import okhttp3.Interceptor;
@@ -37,27 +36,14 @@ public class NewVersionBroadcastInterceptor implements Interceptor {
     public Response intercept(final Chain chain) throws IOException {
         final Response response = chain.proceed(chain.request());
 
-        final String appLatestVersionString = response.header(HEADER_APP_LATEST_VERSION);
-        final ArtifactVersion appLatestVersion = appLatestVersionString == null ?
-                null : new DefaultArtifactVersion(appLatestVersionString);
-
-        final String lastSupportedDateString =
-                response.header(HEADER_APP_VERSION_LAST_SUPPORTED_DATE);
-        Date lastSupportedDate = null;
-        if (lastSupportedDateString != null) {
-            /* We're using Apache Commons Lang's FastDateFormat here, because it
-             * has improved support for ISO 8601, including UTC offsets and the
-             * "Z" notation.
-             * TODO: Implement this all over the app instead of the existing
-             * SimpleDateFormat.
-             */
-            try {
-                lastSupportedDate = DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT
-                        .parse(lastSupportedDateString);
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
+        final ArtifactVersion appLatestVersion; {
+            final String appLatestVersionString = response.header(HEADER_APP_LATEST_VERSION);
+            appLatestVersion = appLatestVersionString == null ?
+                    null : new DefaultArtifactVersion(appLatestVersionString);
         }
+
+        final Date lastSupportedDate = DateUtil.convertToDate(
+                response.header(HEADER_APP_VERSION_LAST_SUPPORTED_DATE));
 
         // TODO: Create a utility class that defines all HTTP errors as constants.
         final boolean isUnsupported = response.code() == 426;
