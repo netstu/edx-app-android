@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:layout_marginBottom="@dimen/discussion_responses_standard_margin"
     android:orientation="horizontal"
-    tools:showIn="@layout/row_discussion_comment">
+    tools:showIn="@layout/row_discussion_comments_comment">
 
     <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/profile_image"

@@ -1,7 +1,7 @@
 package org.edx.mobile.view.adapters;
 
 import android.content.Context;
-import android.support.annotation.DrawableRes;
+import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.v4.widget.TextViewCompat;
 import android.support.v7.widget.RecyclerView;
@@ -50,6 +50,7 @@ public class DiscussionCommentsAdapter extends RecyclerView.Adapter implements I
     private boolean progressVisible = false;
 
     static class RowType {
+        static final int RESPONSE = 0;
         static final int COMMENT = 1;
         static final int PROGRESS = 2;
     }
@@ -92,28 +93,26 @@ public class DiscussionCommentsAdapter extends RecyclerView.Adapter implements I
             };
         }
 
-        return new ViewHolder(LayoutInflater.
+        @LayoutRes
+        int layout = R.layout.row_discussion_comments_comment;
+        if (viewType == RowType.RESPONSE) {
+            layout = R.layout.row_discussion_comments_response;
+        }
+        return new ResponseAndCommentViewHolder(LayoutInflater.
                 from(parent.getContext()).
-                inflate(R.layout.row_discussion_comment, parent, false));
+                inflate(layout, parent, false));
     }
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int position) {
-        if (!(viewHolder instanceof ViewHolder)) return;
-        final ViewHolder holder = (ViewHolder) viewHolder;
+        if (getItemViewType(position) == RowType.PROGRESS) return;
+        final ResponseAndCommentViewHolder holder = (ResponseAndCommentViewHolder) viewHolder;
         final DiscussionComment discussionComment;
-        final RecyclerView.LayoutParams layoutParams = (RecyclerView.LayoutParams) holder.discussionCommentRow.getLayoutParams();
-        layoutParams.topMargin = layoutParams.bottomMargin = 0;
-        @DrawableRes
-        final int backgroundRes;
         final IconDrawable iconDrawable;
-        final int standardMargin = context.getResources().getDimensionPixelOffset(R.dimen.discussion_responses_standard_margin);
         if (position == 0) {
             discussionComment = response;
 
             DiscussionTextUtils.setEndorsedState(holder.authorLayoutViewHolder.answerTextView, thread, response);
-            backgroundRes = R.drawable.row_discussion_first_comment_background;
-            layoutParams.topMargin = context.getResources().getDimensionPixelOffset(R.dimen.discussion_responses_standard_margin);
             final int childCount = discussionComment.getChildCount();
             holder.discussionCommentCountReportTextView.setText(context.getResources().
                     getQuantityString(R.plurals.number_responses_or_comments_comments_label, childCount, childCount));
@@ -125,20 +124,13 @@ public class DiscussionCommentsAdapter extends RecyclerView.Adapter implements I
 
         } else {
             holder.authorLayoutViewHolder.answerTextView.setVisibility(View.GONE);
-
             discussionComment = discussionComments.get(position - 1);
-            if (!progressVisible && position == getItemCount() - 1) {
-                backgroundRes = R.drawable.row_discussion_last_comment_background;
-                layoutParams.bottomMargin = standardMargin;
-            } else {
-                backgroundRes = R.drawable.row_discussion_comment_background;
-            }
 
             iconDrawable = new IconDrawable(context, FontAwesomeIcons.fa_flag)
                     .sizeRes(context, R.dimen.edx_xxx_small)
-                    .colorRes(context, discussionComment.isAbuseFlagged() ? R.color.edx_brand_primary_base : R.color.edx_grayscale_neutral_dark);
+                    .colorRes(context, discussionComment.isAbuseFlagged() ? R.color.edx_brand_primary_base : R.color.edx_grayscale_neutral_base);
             holder.discussionCommentCountReportTextView.setText(discussionComment.isAbuseFlagged() ? context.getString(R.string.discussion_responses_reported_label) : context.getString(R.string.discussion_responses_report_label));
-            holder.discussionCommentCountReportTextView.setTextColor(context.getResources().getColor(R.color.edx_grayscale_neutral_dark));
+            holder.discussionCommentCountReportTextView.setTextColor(context.getResources().getColor(R.color.edx_grayscale_neutral_base));
 
             holder.discussionCommentCountReportTextView.setOnClickListener(new View.OnClickListener() {
                 public void onClick(final View v) {
@@ -156,9 +148,8 @@ public class DiscussionCommentsAdapter extends RecyclerView.Adapter implements I
                     }
                 });
 
-        TextViewCompat.setCompoundDrawablesRelativeWithIntrinsicBounds(holder.discussionCommentCountReportTextView, iconDrawable, null, null, null);
-        holder.discussionCommentRow.setLayoutParams(layoutParams);
-        holder.discussionCommentRow.setBackgroundResource(backgroundRes);
+        TextViewCompat.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                holder.discussionCommentCountReportTextView, iconDrawable, null, null, null);
 
         String commentBody = discussionComment.getRawBody();
         holder.discussionCommentBody.setText(commentBody);
@@ -167,13 +158,18 @@ public class DiscussionCommentsAdapter extends RecyclerView.Adapter implements I
     @Override
     public int getItemCount() {
         int total = 1 + discussionComments.size();
-        if (progressVisible)
+        if (progressVisible) {
             total++;
+        }
         return total;
     }
 
     @Override
     public int getItemViewType(int position) {
+        if (position == 0) {
+            return RowType.RESPONSE;
+        }
+
         if (progressVisible && position == getItemCount() - 1) {
             return RowType.PROGRESS;
         }
@@ -196,14 +192,14 @@ public class DiscussionCommentsAdapter extends RecyclerView.Adapter implements I
         notifyItemChanged(lastCommentIndex); // Last item's background is different, so must be refreshed as well
     }
 
-    private static class ViewHolder extends RecyclerView.ViewHolder {
+    private static class ResponseAndCommentViewHolder extends RecyclerView.ViewHolder {
         View discussionCommentRow;
         TextView discussionCommentBody;
         TextView discussionCommentCountReportTextView;
 
         AuthorLayoutViewHolder authorLayoutViewHolder;
 
-        public ViewHolder(View itemView) {
+        public ResponseAndCommentViewHolder(View itemView) {
             super(itemView);
             discussionCommentRow = itemView.findViewById(R.id.row_discussion_comment_layout);
             discussionCommentBody = (TextView) itemView.findViewById(R.id.discussion_comment_body);
