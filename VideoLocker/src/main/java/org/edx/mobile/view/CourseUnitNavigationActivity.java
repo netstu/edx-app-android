@@ -172,20 +172,15 @@ public class CourseUnitNavigationActivity extends CourseBaseActivity implements 
 
         setTitle(selectedUnit.getDisplayName());
 
-        // fix: https://openedx.atlassian.net/browse/MA-995
-        // code below decides to show Next/Previous Unit name or only Next/Previous
-        // based on units in a subsection
         String currentSubsectionId = selectedUnit.getParent().getId();
         if (curIndex + 1 <= pagerAdapter.getCount() - 1) {
             String nextUnitSubsectionId = unitList.get(curIndex + 1).getParent().getId();
             if (currentSubsectionId.equalsIgnoreCase(nextUnitSubsectionId)) {
                 mNextUnitLbl.setVisibility(View.GONE);
-                mNextBtn.setText(R.string.assessment_next);
             }
             else {
                 mNextUnitLbl.setText(unitList.get(curIndex + 1).getParent().getDisplayName());
                 mNextUnitLbl.setVisibility(View.VISIBLE);
-                mNextBtn.setText(R.string.assessment_next_unit);
             }
         }
         else {
@@ -203,12 +198,10 @@ public class CourseUnitNavigationActivity extends CourseBaseActivity implements 
             else {
                 mPreviousUnitLbl.setText(unitList.get(curIndex - 1).getParent().getDisplayName());
                 mPreviousUnitLbl.setVisibility(View.VISIBLE);
-                mPreviousBtn.setText(R.string.assessment_previous_unit);
             }
         }
         else {
             // we have reached the start and previous button is disabled
-            mPreviousBtn.setText(R.string.assessment_previous);
             mPreviousUnitLbl.setVisibility(View.GONE);
         }
     }
@@ -228,7 +221,7 @@ public class CourseUnitNavigationActivity extends CourseBaseActivity implements 
         PrefManager.UserPrefManager userPrefManager = new PrefManager.UserPrefManager(MainApplication.instance());
         EnumSet<BlockType> types =  userPrefManager.isUserPrefVideoModel() ?
                              EnumSet.of(BlockType.VIDEO) : EnumSet.allOf(BlockType.class);
-        ((CourseComponent) selectedUnit.getRoot()).fetchAllLeafComponents(leaves, types);
+        selectedUnit.getRoot().fetchAllLeafComponents(leaves, types);
         unitList.addAll( leaves );
         pagerAdapter.notifyDataSetChanged();
 
@@ -259,12 +252,8 @@ public class CourseUnitNavigationActivity extends CourseBaseActivity implements 
     private void updateUIForOrientation(){
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
             setActionBarVisible(false);
-            findViewById(R.id.course_unit_nav_bar).setVisibility(View.GONE);
-            pager.setEnabled(false);
         } else {
             setActionBarVisible(true);
-            findViewById(R.id.course_unit_nav_bar).setVisibility(View.VISIBLE);
-            pager.setEnabled(true);
         }
     }
 

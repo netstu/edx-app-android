@@ -278,23 +278,23 @@ public class CourseUnitNavigationActivityTest extends CourseBaseActivityTest {
                 null : prevUnit.getParent();
         CourseComponent nextSection = nextUnit == null ?
                 null : nextUnit.getParent();
+
+        assertThat(prevButton).hasText(R.string.assessment_previous);
+        assertThat(nextButton).hasText(R.string.assessment_next);
+
         if (prevSection == null ||
                 currentUnit.getParent().equals(prevSection)) {
             assertThat(prevUnitLabel).isNotVisible();
-            assertThat(prevButton).hasText(R.string.assessment_previous);
         } else {
             assertThat(prevUnitLabel).isVisible();
             assertThat(prevUnitLabel).hasText(prevSection.getDisplayName());
-            assertThat(prevButton).hasText(R.string.assessment_previous_unit);
         }
         if (nextSection == null ||
                 currentUnit.getParent().equals(nextSection)) {
             assertThat(nextUnitLabel).isNotVisible();
-            assertThat(nextButton).hasText(R.string.assessment_next);
         } else {
             assertThat(nextUnitLabel).isVisible();
             assertThat(nextUnitLabel).hasText(nextSection.getDisplayName());
-            assertThat(nextButton).hasText(R.string.assessment_next_unit);
         }
     }
     /**
@@ -311,15 +311,10 @@ public class CourseUnitNavigationActivityTest extends CourseBaseActivityTest {
         }
         View courseUnitNavBar = activity.findViewById(R.id.course_unit_nav_bar);
         assertNotNull(courseUnitNavBar);
-        if (isLandscape) {
-            assertThat(courseUnitNavBar).isNotVisible();
-        } else {
-            assertThat(courseUnitNavBar).isVisible();
-        }
+        assertThat(courseUnitNavBar).isVisible();
         View pagerView = activity.findViewById(R.id.pager);
         assertNotNull(pagerView);
         assertThat(pagerView).isInstanceOf(DisableableViewPager.class);
-        assertEquals(!isLandscape, ((DisableableViewPager) pagerView).isEnabled());
     }
 
     /**
