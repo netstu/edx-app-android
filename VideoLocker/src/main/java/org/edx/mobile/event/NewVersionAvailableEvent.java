@@ -28,6 +28,9 @@ public class NewVersionAvailableEvent implements Comparable<NewVersionAvailableE
      * by the subscribers. To address this restriction, this class defined methods to mark instances
      * as having being consumed, which can be used by subscribers for this purpose.
      *
+     * If all the parameters are null or false, then it wouldn't be a valid event, and nothing would
+     * be posted on the event bus.
+     *
      * @param newVersion        The version number of the latest release of the app.
      * @param lastSupportedDate The last date on which the current version of the app will be
      *                          supported.
@@ -40,9 +43,13 @@ public class NewVersionAvailableEvent implements Comparable<NewVersionAvailableE
     public static void post(@Nullable final ArtifactVersion newVersion,
                             @Nullable final Date lastSupportedDate,
                             final boolean isUnsupported) {
+        final NewVersionAvailableEvent event;
+        try {
+            event = new NewVersionAvailableEvent(newVersion, lastSupportedDate, isUnsupported);
+        } catch (IllegalArgumentException e) {
+            return;
+        }
         final EventBus eventBus = EventBus.getDefault();
-        final NewVersionAvailableEvent event =
-                new NewVersionAvailableEvent(newVersion, lastSupportedDate, isUnsupported);
         final NewVersionAvailableEvent postedEvent =
                 eventBus.getStickyEvent(NewVersionAvailableEvent.class);
         if (postedEvent == null || event.compareTo(postedEvent) > 0) {
@@ -59,8 +66,9 @@ public class NewVersionAvailableEvent implements Comparable<NewVersionAvailableE
     private boolean isConsumed;
 
     /**
-     * Construct a new instance of NewVersionAvailableEvent. The constructor is private because the
-     * class is only supposed to be initialized from the
+     * Construct a new instance of NewVersionAvailableEvent. Any individual parameter can be null or
+     * false, but at last one needs to be non-null or true in order for the event to be valid. The
+     * constructor is private because the class is only supposed to be initialized from the
      * {@link #post(ArtifactVersion, Date, boolean)} method.
      *
      * @param newVersion        The version number of the latest release of the app.
@@ -71,10 +79,15 @@ public class NewVersionAvailableEvent implements Comparable<NewVersionAvailableE
      *                          last supported date (the two properties may not be consistent with
      *                          each other due to wrong local clock time or an inconsistency in the
      *                          server configurations).
+     * @throws IllegalArgumentException if all of the parameters are {@code null} or {@code false}.
      */
     private NewVersionAvailableEvent(@Nullable final ArtifactVersion newVersion,
                                     @Nullable final Date lastSupportedDate,
                                     final boolean isUnsupported) {
+            throws IllegalArgumentException {
+        if (!isUnsupported && lastSupportedDate == null && newVersion == null) {
+            throw new IllegalStateException("At least one parameter needs to be non-null or true");
+        }
         this.newVersion = newVersion;
         // Date is not immutable, so make a defensive copy of it.
         this.lastSupportedDate = lastSupportedDate == null ?
@@ -83,7 +96,8 @@ public class NewVersionAvailableEvent implements Comparable<NewVersionAvailableE
     }
 
     /**
-     * @return The version number of the latest release of the app.
+     * @return The version number of the latest release of the app, or {@code null} if not
+     *         available.
      */
     @Nullable
     public ArtifactVersion getNewVersion() {
@@ -91,7 +105,8 @@ public class NewVersionAvailableEvent implements Comparable<NewVersionAvailableE
     }
 
     /**
-     * @return The last date on which the current version of the app will be supported.
+     * @return The last date on which the current version of the app will be supported, or
+     *         {@code null} if not available.
      */
     @Nullable
     public Date getLastSupportedDate() {
