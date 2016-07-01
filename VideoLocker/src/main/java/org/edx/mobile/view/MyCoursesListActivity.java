@@ -6,7 +6,6 @@ import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.google.inject.Inject;
 
@@ -126,26 +125,18 @@ public class MyCoursesListActivity extends BaseSingleFragmentActivity {
      */
     public void onEvent(final NewVersionAvailableEvent newVersionAvailableEvent) {
         if (!newVersionAvailableEvent.isConsumed()) {
-            Snackbar snackbar = Snackbar.make(coordinatorLayout,
+            Snackbar.make(coordinatorLayout,
                             newVersionAvailableEvent.getNotificationString(this),
                             Snackbar.LENGTH_INDEFINITE)
-                    .setAction(R.string.app_version_upgrade_button,
+                    .setAction(R.string.app_version_update_button,
                             AppStoreUtils.OPEN_APP_IN_APP_STORE_CLICK_LISTENER)
                     .setCallback(new Snackbar.Callback() {
                         @Override
                         public void onDismissed(Snackbar snackbar, int event) {
                             newVersionAvailableEvent.markAsConsumed();
                         }
-                    });
-            /* The Snackbar layout truncates the text to two lines, and the action
-             * text also takes up lots of space at the right. Manually increase
-             * the maximum lines limit to 10 in order to have our current messages
-             * displayed.
-             * TODO: Make the strings shorter?
-             */
-            ((TextView) snackbar.getView().findViewById(
-                    android.support.design.R.id.snackbar_text)).setMaxLines(7);
-            snackbar.show();
+                    })
+                    .show();
         }
     }
 }

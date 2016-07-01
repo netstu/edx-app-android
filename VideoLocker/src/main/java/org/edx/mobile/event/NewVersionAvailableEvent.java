@@ -4,19 +4,13 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
-import android.support.v4.util.ArrayMap;
 
 import org.edx.mobile.R;
 import org.edx.mobile.third_party.lang.BooleanUtils;
 import org.edx.mobile.third_party.lang.ObjectUtils;
 import org.edx.mobile.third_party.versioning.ArtifactVersion;
-import org.edx.mobile.util.ResourceUtil;
 
-import java.text.DateFormat;
-import java.text.Format;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Map;
 
 import de.greenrobot.event.EventBus;
 
@@ -55,8 +49,6 @@ public class NewVersionAvailableEvent implements Comparable<NewVersionAvailableE
             eventBus.postSticky(event);
         }
     }
-
-    private static final Format dateFormat = SimpleDateFormat.getDateInstance(DateFormat.DEFAULT);
 
     @Nullable
     private final ArtifactVersion newVersion;
@@ -128,21 +120,15 @@ public class NewVersionAvailableEvent implements Comparable<NewVersionAvailableE
     public CharSequence getNotificationString(@NonNull final Context context) {
         @StringRes
         final int notificationStringRes;
-        final Map<String, CharSequence> phraseMapping = new ArrayMap<>();
         if (isUnsupported) {
             notificationStringRes = R.string.app_version_unsupported;
         } else if (lastSupportedDate == null) {
             notificationStringRes = R.string.app_version_outdated;
         } else {
+            // Deadline date is available, but won't be displayed for now.
             notificationStringRes = R.string.app_version_deprecated;
-            final String formattedDate;
-            synchronized (dateFormat) {
-                formattedDate = dateFormat.format(lastSupportedDate);
-            }
-            phraseMapping.put("last_supported_date", formattedDate);
         }
-        return ResourceUtil.getFormattedString(context.getResources(),
-                notificationStringRes, phraseMapping);
+        return context.getText(notificationStringRes);
     }
 
     /**
