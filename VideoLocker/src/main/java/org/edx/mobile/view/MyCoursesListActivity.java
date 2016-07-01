@@ -2,6 +2,7 @@ package org.edx.mobile.view;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -24,6 +25,7 @@ import de.greenrobot.event.EventBus;
 
 public class MyCoursesListActivity extends BaseSingleFragmentActivity {
 
+    @NonNull
     private CoordinatorLayout coordinatorLayout;
 
     @Inject
@@ -123,7 +125,7 @@ public class MyCoursesListActivity extends BaseSingleFragmentActivity {
      *
      * @param newVersionAvailableEvent The new app version availability event.
      */
-    public void onEvent(final NewVersionAvailableEvent newVersionAvailableEvent) {
+    public void onEvent(@NonNull final NewVersionAvailableEvent newVersionAvailableEvent) {
         if (!newVersionAvailableEvent.isConsumed()) {
             Snackbar.make(coordinatorLayout,
                             newVersionAvailableEvent.getNotificationString(this),

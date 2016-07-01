@@ -160,7 +160,7 @@ public class NewVersionAvailableEvent implements Comparable<NewVersionAvailableE
      *         something comparable to {@code this} instance.
      */
     @Override
-    public int compareTo(final NewVersionAvailableEvent another) {
+    public int compareTo(@NonNull final NewVersionAvailableEvent another) {
         int result = BooleanUtils.compare(isUnsupported, another.isUnsupported);
         if (result == 0) {
             /* Reverse the comparator here, since the closer the date is, the higher the priority.
