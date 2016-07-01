@@ -44,9 +44,9 @@ public class MyCoursesListActivity extends BaseSingleFragmentActivity {
         configureDrawer();
         setTitle(getString(R.string.label_my_courses));
         /* Add a CoordinatorLayout so that the Snackbar can be dismissed. It's added as a
-         * new content view for convenience, to avoid messing with the existing layout. As
-         * we implement Snackbar notifications globally throughout the app, we should
-         * probably set up the CoordinatorLayout as a global content view parent in
+         * new content view for convenience, to avoid messing with the existing layout.
+         * TODO: As we implement Snackbar notifications globally throughout the app, we
+         * should probably set up the CoordinatorLayout as a global content view parent in
          * BaseFragmentActivity.
          */
         coordinatorLayout = new CoordinatorLayout(this);
