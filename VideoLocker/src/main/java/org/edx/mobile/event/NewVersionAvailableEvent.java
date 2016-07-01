@@ -82,8 +82,8 @@ public class NewVersionAvailableEvent implements Comparable<NewVersionAvailableE
      * @throws IllegalArgumentException if all of the parameters are {@code null} or {@code false}.
      */
     private NewVersionAvailableEvent(@Nullable final ArtifactVersion newVersion,
-                                    @Nullable final Date lastSupportedDate,
-                                    final boolean isUnsupported) {
+                                     @Nullable final Date lastSupportedDate,
+                                     final boolean isUnsupported)
             throws IllegalArgumentException {
         if (!isUnsupported && lastSupportedDate == null && newVersion == null) {
             throw new IllegalStateException("At least one parameter needs to be non-null or true");
@@ -172,7 +172,7 @@ public class NewVersionAvailableEvent implements Comparable<NewVersionAvailableE
      *         a positive integer if this instance has greater priority than {@code another};
      *         0 if this instance has the same priority as {@code another}.
      * @throws ClassCastException if {@code another} cannot be converted into
-     *         something comparable to {@code this} instance.
+     *                            something comparable to {@code this} instance.
      */
     @Override
     public int compareTo(@NonNull final NewVersionAvailableEvent another) {
