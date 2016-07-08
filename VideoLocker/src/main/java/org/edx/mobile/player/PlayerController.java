@@ -303,7 +303,7 @@ public class PlayerController extends FrameLayout {
         updatePausePlay();
         updateFullScreen();
         updateTitle();
-        setAccessibilityFocusPausePlay();
+        setAccessibilityFocusPausePlay(false);
 
         // cause the progress bar to be updated even if mShowing
         // was already true.  This happens, for example, if we're
@@ -374,15 +374,15 @@ public class PlayerController extends FrameLayout {
      */
     public void requestAccessibilityFocusPausePlay() {
         if (mShowing && mAnchor != null) {
-            setAccessibilityFocusPausePlay();
+            setAccessibilityFocusPausePlay(true);
         }
         else {
             mPauseAccessibilityRequestQueued = true;
         }
     }
 
-    private void setAccessibilityFocusPausePlay() {
-        if (mPauseButton != null) {
+    private void setAccessibilityFocusPausePlay(boolean force) {
+        if ((mPauseButton != null) && (mPauseAccessibilityRequestQueued || force)) {
             mPauseButton.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED);
             mPauseAccessibilityRequestQueued = false;
         }

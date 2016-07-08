@@ -398,7 +398,7 @@ public class Player extends MediaPlayer implements OnErrorListener,
                         && state != PlayerState.RESET
                         && state != PlayerState.URI_SET) {
                     logger.debug("Player touched");
-                    if (controller.isShowing()) {
+                    if (controller.isShowing() && autoHideControls) {
                         controller.hide();
                     } else {
                         controller.setLmsUrl(lmsURL);
