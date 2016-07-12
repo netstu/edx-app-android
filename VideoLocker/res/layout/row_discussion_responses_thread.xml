@@ -23,7 +23,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <include layout="@layout/discussion_user_profile_row" />
+            <include layout="@layout/row_discussion_user_profile" />
 
             <Space
                 android:layout_width="0dp"
@@ -34,7 +34,7 @@
                 layout="@layout/number_responses_or_comments_layout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp" />
+                android:layout_marginTop="@dimen/discussion_responses_standard_half_margin" />
 
         </LinearLayout>
 

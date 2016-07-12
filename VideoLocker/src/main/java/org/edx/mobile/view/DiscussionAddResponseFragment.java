@@ -83,12 +83,13 @@ public class DiscussionAddResponseFragment extends BaseFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_add_response, container, false);
+        return inflater.inflate(R.layout.fragment_add_response_or_comment, container, false);
     }
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        textViewTitle.setVisibility(View.VISIBLE);
         textViewTitle.setText(discussionThread.getTitle());
         textViewResponse.setText(Html.fromHtml(discussionThread.getRenderedBody()));
 

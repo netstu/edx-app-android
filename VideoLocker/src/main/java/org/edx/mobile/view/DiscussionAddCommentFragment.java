@@ -54,6 +54,9 @@ public class DiscussionAddCommentFragment extends BaseFragment {
     @InjectView(R.id.btnAddComment)
     private ViewGroup buttonAddComment;
 
+    @InjectView(R.id.btnAddCommentText)
+    private TextView textViewAddComment;
+
     @InjectView(R.id.progress_indicator)
     private ProgressBar createCommentProgressBar;
 
@@ -85,7 +88,7 @@ public class DiscussionAddCommentFragment extends BaseFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_add_comment, container, false);
+        return inflater.inflate(R.layout.fragment_add_response_or_comment, container, false);
     }
 
     @Override
@@ -107,12 +110,15 @@ public class DiscussionAddCommentFragment extends BaseFragment {
         DiscussionTextUtils.setEndorsedState(authorLayoutViewHolder.answerTextView,
                 discussionThread, discussionResponse);
 
+        textViewAddComment.setText(R.string.discussion_add_comment_button_label);
         buttonAddComment.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 createComment();
             }
         });
         buttonAddComment.setEnabled(false);
+        buttonAddComment.setContentDescription(getString(R.string.discussion_add_comment_button_description));
+        editTextNewComment.setHint(R.string.discussion_add_comment_hint);
         editTextNewComment.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {

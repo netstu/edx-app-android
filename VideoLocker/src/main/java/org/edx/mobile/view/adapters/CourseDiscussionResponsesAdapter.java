@@ -99,7 +99,7 @@ public class CourseDiscussionResponsesAdapter extends RecyclerView.Adapter imple
         if (viewType == RowType.THREAD) {
             View discussionThreadRow = LayoutInflater.
                     from(parent.getContext()).
-                    inflate(R.layout.discussion_responses_thread_row, parent, false);
+                    inflate(R.layout.row_discussion_responses_thread, parent, false);
 
             return new DiscussionThreadViewHolder(discussionThreadRow);
         }
@@ -109,7 +109,7 @@ public class CourseDiscussionResponsesAdapter extends RecyclerView.Adapter imple
 
         View discussionResponseRow = LayoutInflater.
                 from(parent.getContext()).
-                inflate(R.layout.discussion_responses_response_row, parent, false);
+                inflate(R.layout.row_discussion_responses_response, parent, false);
         // CardView adds extra padding on pre-lollipop devices for shadows
         // Since, we've set cardUseCompatPadding to true in the layout file
         // so we need to deduct the extra padding from margins in any case to get the desired results

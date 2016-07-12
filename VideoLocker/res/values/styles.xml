@@ -281,11 +281,6 @@
         <item name="android:background">@drawable/white_circle</item>
     </style>
 
-    <style name="discussion_profile_image" parent="profile_image">
-        <item name="civ_border_color">@color/edx_brand_primary_base</item>
-        <item name="civ_border_width">@dimen/discussion_image_border_width</item>
-    </style>
-
     <!-- Styles from the edX style guide will be nested under "edX" -->
     <style name="edX" />
 

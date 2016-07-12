@@ -5,12 +5,12 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_marginBottom="@dimen/discussion_responses_standard_margin"
+    android:background="?android:selectableItemBackground"
     android:orientation="horizontal"
     tools:showIn="@layout/row_discussion_comments_comment">
 
     <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/profile_image"
-        style="@style/discussion_profile_image"
         android:layout_width="@dimen/discussion_image_diameter"
         android:layout_height="@dimen/discussion_image_diameter"
         android:layout_marginEnd="@dimen/discussion_responses_standard_margin"
@@ -28,7 +28,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/edx_grayscale_neutral_base"
-            android:textDirection="locale"
             android:textSize="@dimen/edx_xxx_small"
             android:textStyle="bold"
             tools:text="Brian (Staff)" />
@@ -42,8 +41,16 @@
             android:textSize="@dimen/edx_xxx_small"
             tools:text="10 minutes ago" />
 
-        <include layout="@layout/discussion_endorsed_text_view" />
-
+        <TextView
+            android:id="@+id/discussion_responses_answer_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawablePadding="4dp"
+            android:text="@string/discussion_responses_answer"
+            android:textColor="@color/edx_utility_success"
+            android:textSize="@dimen/edx_x_small"
+            android:visibility="gone"
+            tools:showIn="@layout/row_discussion_responses_response"
+            tools:visibility="visible" />
     </LinearLayout>
-
 </LinearLayout>
