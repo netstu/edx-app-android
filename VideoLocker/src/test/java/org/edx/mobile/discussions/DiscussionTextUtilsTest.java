@@ -155,6 +155,65 @@ public class DiscussionTextUtilsTest extends BaseTestCase {
         }
     }
 
+    @Test
+    public void testSetAuthor_AllCombinations() {
+        final TextView textView = new TextView(context);
+
+        // Input values
+        final String author = "author";
+        final String label = "label";
+        final Date creationDate = Mockito.mock(Date.class);
+
+        // Expected output constructs
+        final String outputAuthorLbl = ResourceUtil.getFormattedString(context.getResources(),
+                R.string.discussion_post_author_label_attribution, "text", label).toString();
+
+        assertSetAuthorText(textView,
+                new StubAuthorData(author, label, creationDate),
+                author + " " + outputAuthorLbl);
+        assertSetAuthorText(textView,
+                new StubAuthorData(author, null, creationDate),
+                author);
+        assertSetAuthorText(textView,
+                new StubAuthorData(null, label, creationDate),
+                outputAuthorLbl);
+        assertSetAuthorText(textView,
+                new StubAuthorData(null, null, creationDate),
+                outputAuthorLbl);
+    }
+
+    private void assertSetAuthorText(TextView textView, IAuthorData input,
+                                                String expectedOutput) {
+        DiscussionTextUtils.setAuthorText(textView, input);
+        if (expectedOutput == null) {
+            assertTrue(textView.getVisibility() == View.GONE);
+        } else {
+            String output = textView.getText().toString();
+            assertEquals(expectedOutput, output);
+
+            if (!input.isAuthorAnonymous()) {
+                int start = output.indexOf(input.getAuthor());
+                int end = start + input.getAuthor().length();
+                Spanned text = (Spanned) textView.getText();
+                StyleSpan[] styleSpans = text.getSpans(start, end, StyleSpan.class);
+                ForegroundColorSpan[] colorSpans = text.getSpans(start, end, ForegroundColorSpan.class);
+
+                // Verify that the author text is bold
+                assertEquals(1, styleSpans.length);
+                assertEquals(start, text.getSpanStart(styleSpans[0]));
+                assertEquals(end, text.getSpanEnd(styleSpans[0]));
+                assertEquals(Typeface.BOLD, styleSpans[0].getStyle());
+
+                // Verify that the correct foreground color is set
+                assertEquals(1, colorSpans.length);
+                assertEquals(start, text.getSpanStart(colorSpans[0]));
+                assertEquals(end, text.getSpanEnd(colorSpans[0]));
+                assertEquals(context.getResources().getColor(R.color.edx_brand_primary_base),
+                        colorSpans[0].getForegroundColor());
+            }
+        }
+    }
+
     private static class StubAuthorData implements IAuthorData {
         private final String author, authorLabel;
         private final Date createdDate;
