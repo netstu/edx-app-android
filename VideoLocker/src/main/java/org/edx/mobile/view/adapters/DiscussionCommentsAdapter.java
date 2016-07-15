@@ -94,11 +94,13 @@ public class DiscussionCommentsAdapter extends RecyclerView.Adapter implements I
         }
 
         @LayoutRes
-        int layout = R.layout.row_discussion_comments_comment;
+        final int layout;
         if (viewType == RowType.RESPONSE) {
             layout = R.layout.row_discussion_comments_response;
+        } else {
+            layout = R.layout.row_discussion_comments_comment;
         }
-        return new ResponseAndCommentViewHolder(LayoutInflater.
+        return new ResponseOrCommentViewHolder(LayoutInflater.
                 from(parent.getContext()).
                 inflate(layout, parent, false));
     }
@@ -106,7 +108,7 @@ public class DiscussionCommentsAdapter extends RecyclerView.Adapter implements I
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int position) {
         if (getItemViewType(position) == RowType.PROGRESS) return;
-        final ResponseAndCommentViewHolder holder = (ResponseAndCommentViewHolder) viewHolder;
+        final ResponseOrCommentViewHolder holder = (ResponseOrCommentViewHolder) viewHolder;
         final DiscussionComment discussionComment;
         final IconDrawable iconDrawable;
         if (position == 0) {
@@ -166,12 +168,12 @@ public class DiscussionCommentsAdapter extends RecyclerView.Adapter implements I
 
     @Override
     public int getItemViewType(int position) {
-        if (position == 0) {
-            return RowType.RESPONSE;
-        }
-
         if (progressVisible && position == getItemCount() - 1) {
             return RowType.PROGRESS;
+        }
+
+        if (position == 0) {
+            return RowType.RESPONSE;
         }
 
         return RowType.COMMENT;
@@ -192,14 +194,13 @@ public class DiscussionCommentsAdapter extends RecyclerView.Adapter implements I
         notifyItemChanged(lastCommentIndex); // Last item's background is different, so must be refreshed as well
     }
 
-    private static class ResponseAndCommentViewHolder extends RecyclerView.ViewHolder {
-        View discussionCommentRow;
-        TextView discussionCommentBody;
-        TextView discussionCommentCountReportTextView;
+    private static class ResponseOrCommentViewHolder extends RecyclerView.ViewHolder {
+        public final View discussionCommentRow;
+        public final TextView discussionCommentBody;
+        public final TextView discussionCommentCountReportTextView;
+        public final AuthorLayoutViewHolder authorLayoutViewHolder;
 
-        AuthorLayoutViewHolder authorLayoutViewHolder;
-
-        public ResponseAndCommentViewHolder(View itemView) {
+        public ResponseOrCommentViewHolder(View itemView) {
             super(itemView);
             discussionCommentRow = itemView.findViewById(R.id.row_discussion_comment_layout);
             discussionCommentBody = (TextView) itemView.findViewById(R.id.discussion_comment_body);

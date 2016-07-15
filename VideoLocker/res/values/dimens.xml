@@ -136,7 +136,6 @@
     <dimen name="user_profile_image_border_width">3dp</dimen>
 
     <dimen name="discussion_image_diameter">40dp</dimen>
-    <dimen name="discussion_image_border_width">1dp</dimen>
 
     <!-- font awesome sizes -->
     <dimen name="fa_xxxx_large">38dp</dimen>

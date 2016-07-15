@@ -64,13 +64,10 @@ public class UserAPI {
     public Account getAccount(@NonNull String username) throws HttpException {
         final Account account = userService.getAccount(username);
         EventBus.getDefault().post(new AccountDataLoadedEvent(account));
-
         // Store the logged in user's ProfileImage
-        PrefManager prefManager = new PrefManager(MainApplication.instance(), PrefManager.Pref.LOGIN);
-        if (prefManager.getCurrentUserProfile() != null) {
-            if (username.equals(prefManager.getCurrentUserProfile().username)) {
-                prefManager.put(PrefManager.Key.PROFILE_IMAGE, gson.toJson(account.getProfileImage()));
-            }
+        PrefManager prefManager = getCurrentUserPrefs(username);
+        if (prefManager != null) {
+            prefManager.put(PrefManager.Key.PROFILE_IMAGE, gson.toJson(account.getProfileImage()));
         }
         return account;
     }
@@ -78,6 +75,11 @@ public class UserAPI {
     public Account updateAccount(@NonNull String username, @NonNull String field, @Nullable Object value) throws HttpException {
         final Account updatedAccount = userService.updateAccount(username, Collections.singletonMap(field, value));
         EventBus.getDefault().post(new AccountDataLoadedEvent(updatedAccount));
+        // Update the logged in user's ProfileImage
+        PrefManager prefManager = getCurrentUserPrefs(username);
+        if (prefManager != null) {
+            prefManager.put(PrefManager.Key.PROFILE_IMAGE, gson.toJson(updatedAccount.getProfileImage()));
+        }
         return updatedAccount;
     }
 
@@ -94,6 +96,11 @@ public class UserAPI {
     public void deleteProfileImage(@NonNull String username) throws HttpException {
         userService.deleteProfileImage(username);
         EventBus.getDefault().post(new ProfilePhotoUpdatedEvent(username, null));
+        // Delete the logged in user's ProfileImage
+        PrefManager prefManager = getCurrentUserPrefs(username);
+        if (prefManager != null) {
+            prefManager.put(PrefManager.Key.PROFILE_IMAGE, null);
+        }
     }
 
     public Page<BadgeAssertion> getBadges(@NonNull String username, int page) throws HttpException {
@@ -161,5 +168,16 @@ public class UserAPI {
             ret.add(gson.fromJson(ary.get(cnt), EnrolledCoursesResponse.class));
         }
         return ret;
+    }
+
+    @Nullable
+    private PrefManager getCurrentUserPrefs(String username) {
+        PrefManager prefManager = new PrefManager(MainApplication.instance(), PrefManager.Pref.LOGIN);
+        if (prefManager.getCurrentUserProfile() != null) {
+            if (username.equals(prefManager.getCurrentUserProfile().username)) {
+                return prefManager;
+            }
+        }
+        return null;
     }
 }

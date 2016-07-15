@@ -23,6 +23,7 @@ import com.google.gson.annotations.SerializedName;
 
 import org.edx.mobile.user.DiscussionUser;
 import org.edx.mobile.user.ProfileImage;
+import org.edx.mobile.user.ProfileImageProvider;
 import org.edx.mobile.view.view_holders.AuthorLayoutViewHolder;
 
 import java.io.Serializable;
@@ -30,7 +31,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public class DiscussionThread implements Serializable, IAuthorData, AuthorLayoutViewHolder.ProfileImageProvider {
+public class DiscussionThread implements Serializable, IAuthorData, ProfileImageProvider {
 
     public enum ThreadType {
         @SerializedName("discussion")
@@ -229,10 +230,6 @@ public class DiscussionThread implements Serializable, IAuthorData, AuthorLayout
     @Nullable
     public Map<String, DiscussionUser> getUsers() {
         return users;
-    }
-
-    public void setUsers(@Nullable Map<String, DiscussionUser> users) {
-        this.users = users;
     }
 
     @Nullable

@@ -2,14 +2,15 @@ package org.edx.mobile.view.view_holders;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.widget.TextViewCompat;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.BitmapRequestBuilder;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 import com.google.inject.Inject;
 import com.joanzapata.iconify.IconDrawable;
 import com.joanzapata.iconify.fonts.FontAwesomeIcons;
@@ -20,19 +21,14 @@ import org.edx.mobile.discussion.IAuthorData;
 import org.edx.mobile.model.api.ProfileModel;
 import org.edx.mobile.module.prefs.UserPrefs;
 import org.edx.mobile.user.ProfileImage;
+import org.edx.mobile.user.ProfileImageProvider;
 import org.edx.mobile.util.Config;
 
 import roboguice.RoboGuice;
 
 public class AuthorLayoutViewHolder {
-
-    public interface ProfileImageProvider {
-        @Nullable
-        ProfileImage getProfileImage();
-    }
-
     @Inject
-    UserPrefs userPrefs;
+    private UserPrefs userPrefs;
 
     public final ViewGroup profileRow;
     public final ImageView profileImageView;
@@ -69,11 +65,11 @@ public class AuthorLayoutViewHolder {
             } else {
                 // TODO: Remove this else block when MA-2542 is fixed.
                 /**
-                 * Background: Currently the POST & PUT APIs aren't configured to return a user's
+                 * Background: Currently the POST & PATCH APIs aren't configured to return a user's
                  * {@link ProfileImage} in their response. Since, the currently logged-in user is
                  * the only one that can POST using the app, so, we use the locally stored
                  * {@link ProfileImage} in {@link UserPrefs} instead.
-                 * Incase of PUT we just use the previous {@link ProfileImage} version that we had.
+                 * Incase of PATCH we just use the dummy image.
                  */
                 ProfileModel profileModel = userPrefs.getProfile();
                 if (profileModel != null && authorData.getAuthor().equals(profileModel.username)) {
@@ -83,8 +79,10 @@ public class AuthorLayoutViewHolder {
                 }
             }
             if (profileImage != null && profileImage.hasImage()) {
-                Glide.with(context).load(profileImage.getImageUrlMedium())
-                        .into(profileImageView);
+                Glide.with(context)
+                        .load(profileImage.getImageUrlMedium())
+                        .into(profileImageView)
+                        .onLoadStarted(context.getDrawable(R.drawable.xsie));
             } else {
                 profileImageView.setImageResource(R.drawable.xsie);
             }
