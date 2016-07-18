@@ -4,9 +4,6 @@ import android.content.Context;
 import android.content.SharedPreferences.Editor;
 
 import org.edx.mobile.base.MainApplication;
-import org.edx.mobile.logger.Logger;
-import org.edx.mobile.util.DateUtil;
-import org.edx.mobile.util.Sha1Util;
 
 /**
  * This is a Utility for reading and writing to shared preferences.
@@ -17,7 +14,6 @@ public class PrefManager {
 
     private Context context;
     private String prefName;
-    private static final Logger logger = new Logger(PrefManager.class.getName());
 
     //FIXME - we should use MAApplication's context to clean up
     //the code.
@@ -142,63 +138,6 @@ public class PrefManager {
         return defaultValue;
     }
 
-    /**
-     * Stores information of last accesses subsection for given id.
-     * Modification date is also stored for current time.
-     * Synced is marked as FALSE.
-     *
-     * @param subsectionId
-     * @param lastAccessedFlag
-     */
-    public void putLastAccessedSubsection(String subsectionId, boolean lastAccessedFlag) {
-        Editor edit = context.getSharedPreferences(prefName, Context.MODE_PRIVATE).edit();
-        edit.putString(PrefManager.Key.LASTACCESSED_MODULE_ID, subsectionId);
-        edit.putString(PrefManager.Key.LAST_ACCESS_MODIFICATION_TIME, DateUtil.getModificationDate());
-        edit.putBoolean(PrefManager.Key.LASTACCESSED_SYNCED_FLAG, lastAccessedFlag);
-        edit.commit();
-    }
-
-    /**
-     * Returns true if given courseId's last access is synced with server, false otherwise.
-     *
-     * @return
-     */
-    public boolean isSyncedLastAccessedSubsection() {
-        return context.getSharedPreferences(prefName, Context.MODE_PRIVATE)
-                .getBoolean(PrefManager.Key.LASTACCESSED_SYNCED_FLAG, true);
-    }
-
-
-    /**
-     * Returns last accessed subsection id for the given course.
-     *
-     * @return
-     */
-    public String getLastAccessedSubsectionId() {
-        return context.getSharedPreferences(prefName, Context.MODE_PRIVATE)
-                .getString(PrefManager.Key.LASTACCESSED_MODULE_ID, null);
-    }
-
-    /**
-     * Returns preference file name that can be used to store information about last accessed subsection.
-     * This preference file name is SHA1 hash of a combination of username, courseId and a constant suffix.
-     *
-     * @param username
-     * @param courseId
-     * @return
-     * @throws Exception
-     */
-    public static String getPrefNameForLastAccessedBy(String username, String courseId) {
-        String raw = username + "-" + courseId + "-last-accessed-subsection_info";
-        try {
-            String hash = Sha1Util.SHA1(raw);
-            return hash;
-        } catch (Exception ex) {
-            logger.error(ex);
-        }
-        return raw;
-    }
-
     public static class AppInfoPrefManager extends PrefManager {
         public AppInfoPrefManager(Context context) {
             super(context, PrefManager.Pref.APP_INFO);
@@ -302,9 +241,6 @@ public class PrefManager {
         public static final String DOWNLOAD_ONLY_ON_WIFI = "download_only_on_wifi";
         public static final String DOWNLOAD_OFF_WIFI_SHOW_DIALOG_FLAG = "download_off_wifi_dialog_flag";
         public static final String TRANSCRIPT_LANGUAGE = "transcript_language";
-        public static final String LAST_ACCESS_MODIFICATION_TIME = "last_access_modification_time";
-        public static final String LASTACCESSED_MODULE_ID = "last_access_module_id";
-        public static final String LASTACCESSED_SYNCED_FLAG = "lastaccess_synced_flag";
         public static final String SEGMENT_KEY_BACKEND = "segment_backend";
         public static final String SPEED_TEST_KBPS = "speed_test_kbps";
         public static final String APP_VERSION_NAME = "app_version_name";

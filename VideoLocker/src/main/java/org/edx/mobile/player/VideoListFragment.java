@@ -24,12 +24,11 @@ import org.edx.mobile.interfaces.SectionItemInterface;
 import org.edx.mobile.logger.Logger;
 import org.edx.mobile.model.api.EnrolledCoursesResponse;
 import org.edx.mobile.model.api.LectureModel;
-import org.edx.mobile.model.api.ProfileModel;
 import org.edx.mobile.model.api.VideoResponseModel;
 import org.edx.mobile.model.db.DownloadEntry;
 import org.edx.mobile.module.db.DataCallback;
 import org.edx.mobile.module.prefs.LoginPrefs;
-import org.edx.mobile.module.prefs.PrefManager;
+import org.edx.mobile.services.LastAccessManager;
 import org.edx.mobile.task.CircularProgressTask;
 import org.edx.mobile.util.AppConstants;
 import org.edx.mobile.util.BrowserUtil;
@@ -74,6 +73,9 @@ public class VideoListFragment extends BaseFragment {
 
     @Inject
     TranscriptManager transcriptManager;
+
+    @Inject
+    LastAccessManager lastAccessManager;
 
     @Inject
     protected IEdxEnvironment environment;
@@ -488,11 +490,8 @@ public class VideoListFragment extends BaseFragment {
 
             DownloadEntry v = (DownloadEntry) model;
             try {
-                String prefName = PrefManager.getPrefNameForLastAccessedBy(
-                        loginPrefs.getUsername(), v.eid);
-                PrefManager prefManager = new PrefManager(getActivity(), prefName);
-                VideoResponseModel vrm =  environment.getServiceManager().getVideoById(v.eid, v.videoId);
-                prefManager.putLastAccessedSubsection(vrm.getSection().getId(), false);
+                final VideoResponseModel vrm =  environment.getServiceManager().getVideoById(v.eid, v.videoId);
+                lastAccessManager.setLastAccessed(v.eid, vrm.getSection().getId());
 
                 // capture chapter name
                 if (chapterName == null) {

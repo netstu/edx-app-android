@@ -18,8 +18,8 @@ import org.edx.mobile.logger.Logger;
 import org.edx.mobile.model.course.BlockType;
 import org.edx.mobile.model.course.CourseComponent;
 import org.edx.mobile.module.analytics.ISegment;
-import org.edx.mobile.module.prefs.LoginPrefs;
 import org.edx.mobile.module.prefs.PrefManager;
+import org.edx.mobile.services.LastAccessManager;
 import org.edx.mobile.services.ViewPagerDownloadManager;
 import org.edx.mobile.view.adapters.CourseUnitPagerAdapter;
 import org.edx.mobile.view.common.PageViewStateCallback;
@@ -57,7 +57,7 @@ public class CourseUnitNavigationActivity extends CourseBaseActivity implements 
     private TextView mPreviousUnitLbl;
 
     @Inject
-    LoginPrefs loginPrefs;
+    LastAccessManager lastAccessManager;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -154,10 +154,7 @@ public class CourseUnitNavigationActivity extends CourseBaseActivity implements 
         courseComponentId = selectedUnit.getId();
         environment.getDatabase().updateAccess(null, selectedUnit.getId(), true);
 
-        String prefName = PrefManager.getPrefNameForLastAccessedBy(
-                loginPrefs.getUsername(), selectedUnit.getCourseId());
-        final PrefManager prefManager = new PrefManager(MainApplication.instance(), prefName);
-        prefManager.putLastAccessedSubsection(this.selectedUnit.getId(), false);
+        lastAccessManager.setLastAccessed(selectedUnit.getCourseId(), this.selectedUnit.getId());
         Intent resultData = new Intent();
         resultData.putExtra(Router.EXTRA_COURSE_COMPONENT_ID, courseComponentId);
         setResult(RESULT_OK, resultData);

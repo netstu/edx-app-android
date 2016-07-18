@@ -21,8 +21,7 @@ import org.edx.mobile.model.api.LectureModel;
 import org.edx.mobile.model.api.SectionEntry;
 import org.edx.mobile.model.api.VideoResponseModel;
 import org.edx.mobile.model.db.DownloadEntry;
-import org.edx.mobile.module.prefs.LoginPrefs;
-import org.edx.mobile.module.prefs.PrefManager;
+import org.edx.mobile.services.LastAccessManager;
 import org.edx.mobile.task.EnqueueDownloadTask;
 import org.edx.mobile.util.AppConstants;
 import org.edx.mobile.util.BrowserUtil;
@@ -59,7 +58,7 @@ public class CourseLectureListActivity extends BaseFragmentActivity {
     private String activityTitle;
 
     @Inject
-    LoginPrefs loginPrefs;
+    LastAccessManager lastAccessManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,7 +76,7 @@ public class CourseLectureListActivity extends BaseFragmentActivity {
         lectureListView.setOnItemClickListener(adapter);
 
         enableOfflineCallback();
-    } 
+    }
 
     @Override
     protected void onRestart() {
@@ -93,10 +92,9 @@ public class CourseLectureListActivity extends BaseFragmentActivity {
             public void onItemClicked(LectureModel model) {
                 try {
                     if (model.videos != null && model.videos.size() > 0 && enrollment != null) {
-                        String prefName = PrefManager.getPrefNameForLastAccessedBy(
-                                loginPrefs.getUsername(), enrollment.getCourse().getId());
-                        PrefManager prefManager = new PrefManager(CourseLectureListActivity.this, prefName);
-                        prefManager.putLastAccessedSubsection(model.videos.get(0).getSection().getId(), false);
+                        lastAccessManager.setLastAccessed(
+                                enrollment.getCourse().getId(),
+                                model.videos.get(0).getSection().getId());
                     }
 
                     Intent videoIntent = new Intent(CourseLectureListActivity.this,
@@ -382,7 +380,7 @@ public class CourseLectureListActivity extends BaseFragmentActivity {
         IntentFilter filter = new IntentFilter();
         filter.addAction(AppConstants.VIDEOLIST_BACK_PRESSED);
         registerReceiver(offlineReceiver, filter);
-    } 
+    }
 
     protected void disableOfflineCallback() {
         // un-register logoutReceiver
