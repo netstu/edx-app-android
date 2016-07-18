@@ -183,7 +183,6 @@
         <item name="android:maxHeight">@dimen/video_player_seekbar_height</item>
         <item name="android:layout_marginRight">@dimen/video_player_seekbar_right_margin</item>
         <item name="android:layout_marginEnd">@dimen/video_player_seekbar_right_margin</item>
-        <item name="android:background">@drawable/ic_seek_background</item>
         <item name="android:progressDrawable">@drawable/player_seekbar_progress</item>
         <item name="android:thumb">@drawable/player_seekbar_thumb</item>
         <item name="android:thumbOffset">0dp</item>
@@ -309,7 +308,7 @@
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">@dimen/edx_button_height</item>
         <item name="android:layout_marginTop">@dimen/edx_margin</item>
-        <item name="android:background">@drawable/bt_signin_active</item>
+        <item name="android:background">@drawable/edx_creation_button</item>
     </style>
 
     <style name="edX.Widget.SignInButton" parent="regular_white_text">
