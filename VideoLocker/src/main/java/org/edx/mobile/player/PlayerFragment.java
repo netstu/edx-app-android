@@ -361,12 +361,8 @@ public class PlayerFragment extends BaseFragment implements IPlayerListener, Ser
             showProgress();
         }
 
-        // start playback after 300 milli seconds, so that it works on HTC One, Nexus5, S4, S5
-        // some devices take little time to be ready
-        if (isPrepared) handler.postDelayed(unfreezeCallback, UNFREEZE_DELAY_MS);
-
-        player.setAutoHideControls(!getTouchExploreEnabled());
-        player.requestAccessibilityFocusPausePlay();
+        boolean touchExploreEnabled = getTouchExploreEnabled();
+        player.setAutoHideControls(!touchExploreEnabled);
 
         setTouchExploreChangeListener(new AccessibilityManager.TouchExplorationStateChangeListener() {
             @Override
@@ -374,6 +370,12 @@ public class PlayerFragment extends BaseFragment implements IPlayerListener, Ser
                 player.setAutoHideControls(!enabled);
             }
         });
+
+        // start playback after 300 milli seconds, so that it works on HTC One, Nexus5, S4, S5
+        // some devices take little time to be ready
+        if (isPrepared) {
+            handler.postDelayed(unfreezeCallback, UNFREEZE_DELAY_MS);
+        }
     }
 
     public void handleOnPause(){
@@ -561,6 +563,7 @@ public class PlayerFragment extends BaseFragment implements IPlayerListener, Ser
             controller.setNextPreviousListeners(nextListner, prevListner);
             player.setController(controller);
             reAttachPlayEventListener();
+
         } catch(Exception e) {
             logger.error(e);
         }
@@ -939,9 +942,10 @@ public class PlayerFragment extends BaseFragment implements IPlayerListener, Ser
         public void run() {
             if (isResumed() && !isRemoving()) {
                 if (player != null) {
+
                     player.unfreeze();
                     hideProgress();
-                    if (player.isPlaying()) {
+                    if (player.isPlaying() || getTouchExploreEnabled()) {
                         updateController("player unfreezed");
                     }
 
@@ -954,10 +958,11 @@ public class PlayerFragment extends BaseFragment implements IPlayerListener, Ser
                         pauseDueToDialog = false;
                         player.pause();
                     }
-
                 }
                 orientationDetector.start();
                 handler.sendEmptyMessage(MSG_TYPE_TICK);
+
+                player.requestAccessibilityFocusPausePlay();
             }
         }
     };

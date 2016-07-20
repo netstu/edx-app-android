@@ -21,6 +21,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
@@ -303,7 +304,6 @@ public class PlayerController extends FrameLayout {
         updatePausePlay();
         updateFullScreen();
         updateTitle();
-        setAccessibilityFocusPausePlay(false);
 
         // cause the progress bar to be updated even if mShowing
         // was already true.  This happens, for example, if we're
@@ -333,8 +333,6 @@ public class PlayerController extends FrameLayout {
                 } else {
                     mPauseButton.setEnabled(true);
                 }
-
-                mPauseButton.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED);
             } 
             if (mRewButton != null) {
                 if (!mPlayer.canSeekBackward()) {

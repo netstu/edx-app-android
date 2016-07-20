@@ -154,6 +154,7 @@ public class Player extends MediaPlayer implements OnErrorListener,
     @Override
     public void toggleFullScreen() {
         setFullScreen(!isFullScreen);
+
         if (callback != null) {
             callback.onFullScreen(isFullScreen);
         }
@@ -482,7 +483,7 @@ public class Player extends MediaPlayer implements OnErrorListener,
 
     @Override
     public void requestAccessibilityFocusPausePlay() {
-        if (controller != null) {
+        if (controller != null && controller.isShowing()) {
             controller.requestAccessibilityFocusPausePlay();
         }
     }
