@@ -15,7 +15,7 @@
         android:layout_height="@dimen/discussion_image_diameter"
         android:layout_marginEnd="@dimen/discussion_responses_standard_margin"
         android:layout_marginRight="@dimen/discussion_responses_standard_margin"
-        android:src="@drawable/xsie" />
+        android:src="@drawable/profile_photo_placeholder" />
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -45,7 +45,7 @@
             android:id="@+id/discussion_responses_answer_text_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:drawablePadding="4dp"
+            android:drawablePadding="@dimen/discussion_endorsed_response_icon_padding"
             android:text="@string/discussion_responses_answer"
             android:textColor="@color/edx_utility_success"
             android:textSize="@dimen/edx_x_small"

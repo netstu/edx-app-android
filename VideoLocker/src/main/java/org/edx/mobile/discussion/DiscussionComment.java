@@ -16,6 +16,7 @@
 
 package org.edx.mobile.discussion;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
@@ -23,7 +24,6 @@ import com.google.gson.annotations.SerializedName;
 import org.edx.mobile.user.DiscussionUser;
 import org.edx.mobile.user.ProfileImage;
 import org.edx.mobile.user.ProfileImageProvider;
-import org.edx.mobile.view.view_holders.AuthorLayoutViewHolder;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -176,5 +176,19 @@ public class DiscussionComment implements Serializable, IAuthorData, ProfileImag
         } else {
             return users.get(author).getProfile().getImage();
         }
+    }
+
+    /**
+     * Incase of PATCH calls we get a {@link DiscussionComment} object that doesn't have
+     * {@link #users} object, so, we patch the new object with existing {@link #users}
+     * object.
+     *
+     * @param newObj Updated {@link DiscussionComment} object returned from server.
+     * @return The patched object.
+     */
+    @NonNull
+    public DiscussionComment patchObject(@NonNull DiscussionComment newObj) {
+        newObj.users = users;
+        return newObj;
     }
 }

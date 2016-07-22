@@ -20,7 +20,6 @@ import org.edx.mobile.R;
 import org.edx.mobile.discussion.DiscussionComment;
 import org.edx.mobile.discussion.DiscussionTextUtils;
 import org.edx.mobile.discussion.DiscussionThread;
-import org.edx.mobile.discussion.DiscussionThreadUpdatedEvent;
 import org.edx.mobile.task.SetCommentFlaggedTask;
 import org.edx.mobile.task.SetCommentVotedTask;
 import org.edx.mobile.task.SetThreadFlaggedTask;
@@ -37,7 +36,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
-import de.greenrobot.event.EventBus;
 import roboguice.RoboGuice;
 
 public class CourseDiscussionResponsesAdapter extends RecyclerView.Adapter implements InfiniteScrollUtils.ListContentController<DiscussionComment> {
@@ -168,7 +166,8 @@ public class CourseDiscussionResponsesAdapter extends RecyclerView.Adapter imple
                 SetThreadFlaggedTask task = new SetThreadFlaggedTask(context, discussionThread, !discussionThread.isAbuseFlagged()) {
                     @Override
                     public void onSuccess(DiscussionThread topicThread) {
-                        CourseDiscussionResponsesAdapter.this.discussionThread = topicThread;
+                        super.onSuccess(topicThread);
+                        discussionThread = topicThread;
                         notifyItemChanged(0);
                     }
                 };
@@ -189,8 +188,8 @@ public class CourseDiscussionResponsesAdapter extends RecyclerView.Adapter imple
                 SetThreadVotedTask task = new SetThreadVotedTask(context, discussionThread, !discussionThread.isVoted()) {
                     @Override
                     public void onSuccess(DiscussionThread updatedDiscussionThread) {
-                        CourseDiscussionResponsesAdapter.this.discussionThread = updatedDiscussionThread;
-                        EventBus.getDefault().post(new DiscussionThreadUpdatedEvent(updatedDiscussionThread));
+                        super.onSuccess(updatedDiscussionThread);
+                        discussionThread = updatedDiscussionThread;
                         notifyItemChanged(0);
                     }
                 };
@@ -206,8 +205,8 @@ public class CourseDiscussionResponsesAdapter extends RecyclerView.Adapter imple
                 SetThreadFollowedTask task = new SetThreadFollowedTask(context, discussionThread, !discussionThread.isFollowing()) {
                     @Override
                     public void onSuccess(DiscussionThread updatedDiscussionThread) {
-                        CourseDiscussionResponsesAdapter.this.discussionThread = updatedDiscussionThread;
-                        EventBus.getDefault().post(new DiscussionThreadUpdatedEvent(updatedDiscussionThread));
+                        super.onSuccess(updatedDiscussionThread);
+                        discussionThread = updatedDiscussionThread;
                         notifyItemChanged(0);
                     }
                 };
@@ -302,6 +301,7 @@ public class CourseDiscussionResponsesAdapter extends RecyclerView.Adapter imple
                 SetCommentFlaggedTask task = new SetCommentFlaggedTask(context, comment, !comment.isAbuseFlagged()) {
                     @Override
                     public void onSuccess(DiscussionComment comment) {
+                        super.onSuccess(comment);
                         discussionResponses.set(position - 1, comment);
                         notifyItemChanged(position);
                     }
@@ -326,6 +326,7 @@ public class CourseDiscussionResponsesAdapter extends RecyclerView.Adapter imple
                 SetCommentVotedTask task = new SetCommentVotedTask(context, response, !response.isVoted()) {
                     @Override
                     public void onSuccess(DiscussionComment comment) {
+                        super.onSuccess(comment);
                         discussionResponses.set(position - 1, comment);
                         notifyItemChanged(position);
                     }

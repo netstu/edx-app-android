@@ -184,6 +184,7 @@ public class CourseDiscussionCommentsFragment extends BaseFragment implements Di
         setCommentFlaggedTask = new SetCommentFlaggedTask(context, comment, !comment.isAbuseFlagged()) {
             @Override
             public void onSuccess(DiscussionComment comment) {
+                super.onSuccess(comment);
                 discussionCommentsAdapter.updateComment(comment);
             }
         };

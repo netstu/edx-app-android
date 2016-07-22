@@ -8,9 +8,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.bumptech.glide.BitmapRequestBuilder;
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 import com.google.inject.Inject;
 import com.joanzapata.iconify.IconDrawable;
 import com.joanzapata.iconify.fonts.FontAwesomeIcons;
@@ -60,16 +58,15 @@ public class AuthorLayoutViewHolder {
         final Context context = profileImageView.getContext();
         final ProfileImage profileImage;
         {
-            if (provider.getProfileImage() != null) {
+            if (provider.getProfileImage() != null && provider.getProfileImage().hasImage()) {
                 profileImage = provider.getProfileImage();
             } else {
-                // TODO: Remove this else block when MA-2542 is fixed.
                 /**
                  * Background: Currently the POST & PATCH APIs aren't configured to return a user's
                  * {@link ProfileImage} in their response. Since, the currently logged-in user is
                  * the only one that can POST using the app, so, we use the locally stored
                  * {@link ProfileImage} in {@link UserPrefs} instead.
-                 * Incase of PATCH we just use the dummy image.
+                 * Incase of PATCH we just use the image that we got in the initial GET call.
                  */
                 ProfileModel profileModel = userPrefs.getProfile();
                 if (profileModel != null && authorData.getAuthor().equals(profileModel.username)) {
@@ -81,10 +78,9 @@ public class AuthorLayoutViewHolder {
             if (profileImage != null && profileImage.hasImage()) {
                 Glide.with(context)
                         .load(profileImage.getImageUrlMedium())
-                        .into(profileImageView)
-                        .onLoadStarted(context.getDrawable(R.drawable.xsie));
+                        .into(profileImageView);
             } else {
-                profileImageView.setImageResource(R.drawable.xsie);
+                profileImageView.setImageResource(R.drawable.profile_photo_placeholder);
             }
         }
 

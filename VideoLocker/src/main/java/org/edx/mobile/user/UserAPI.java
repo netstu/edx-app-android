@@ -10,7 +10,6 @@ import com.google.gson.JsonArray;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.edx.mobile.base.MainApplication;
 import org.edx.mobile.event.AccountDataLoadedEvent;
 import org.edx.mobile.event.ProfilePhotoUpdatedEvent;
 import org.edx.mobile.http.ApiConstants;
@@ -20,7 +19,7 @@ import org.edx.mobile.http.cache.CacheManager;
 import org.edx.mobile.logger.Logger;
 import org.edx.mobile.model.Page;
 import org.edx.mobile.model.api.EnrolledCoursesResponse;
-import org.edx.mobile.module.prefs.PrefManager;
+import org.edx.mobile.module.prefs.LoginPrefs;
 import org.edx.mobile.profiles.BadgeAssertion;
 import org.edx.mobile.util.Config;
 import org.edx.mobile.util.IOUtils;
@@ -42,19 +41,22 @@ import retrofit.mime.TypedInput;
 
 @Singleton
 public class UserAPI {
+    private Logger logger = new Logger(UserAPI.class.getName());
+
     @NonNull
     private final UserService userService;
 
-    private Logger logger = new Logger(UserAPI.class.getName());
+    @Inject
+    private Config config;
 
     @Inject
-    Config config;
+    private CacheManager cache;
 
     @Inject
-    CacheManager cache;
+    private Gson gson;
 
     @Inject
-    Gson gson;
+    private LoginPrefs loginPrefs;
 
     @Inject
     public UserAPI(@NonNull RestAdapter restAdapter) {
@@ -65,10 +67,7 @@ public class UserAPI {
         final Account account = userService.getAccount(username);
         EventBus.getDefault().post(new AccountDataLoadedEvent(account));
         // Store the logged in user's ProfileImage
-        PrefManager prefManager = getCurrentUserPrefs(username);
-        if (prefManager != null) {
-            prefManager.put(PrefManager.Key.PROFILE_IMAGE, gson.toJson(account.getProfileImage()));
-        }
+        loginPrefs.setProfileImage(username, account.getProfileImage());
         return account;
     }
 
@@ -76,10 +75,7 @@ public class UserAPI {
         final Account updatedAccount = userService.updateAccount(username, Collections.singletonMap(field, value));
         EventBus.getDefault().post(new AccountDataLoadedEvent(updatedAccount));
         // Update the logged in user's ProfileImage
-        PrefManager prefManager = getCurrentUserPrefs(username);
-        if (prefManager != null) {
-            prefManager.put(PrefManager.Key.PROFILE_IMAGE, gson.toJson(updatedAccount.getProfileImage()));
-        }
+        loginPrefs.setProfileImage(username, updatedAccount.getProfileImage());
         return updatedAccount;
     }
 
@@ -97,10 +93,7 @@ public class UserAPI {
         userService.deleteProfileImage(username);
         EventBus.getDefault().post(new ProfilePhotoUpdatedEvent(username, null));
         // Delete the logged in user's ProfileImage
-        PrefManager prefManager = getCurrentUserPrefs(username);
-        if (prefManager != null) {
-            prefManager.put(PrefManager.Key.PROFILE_IMAGE, null);
-        }
+        loginPrefs.setProfileImage(username, null);
     }
 
     public Page<BadgeAssertion> getBadges(@NonNull String username, int page) throws HttpException {
@@ -168,16 +161,5 @@ public class UserAPI {
             ret.add(gson.fromJson(ary.get(cnt), EnrolledCoursesResponse.class));
         }
         return ret;
-    }
-
-    @Nullable
-    private PrefManager getCurrentUserPrefs(String username) {
-        PrefManager prefManager = new PrefManager(MainApplication.instance(), PrefManager.Pref.LOGIN);
-        if (prefManager.getCurrentUserProfile() != null) {
-            if (username.equals(prefManager.getCurrentUserProfile().username)) {
-                return prefManager;
-            }
-        }
-        return null;
     }
 }

@@ -6,6 +6,7 @@ import android.text.TextUtils;
 
 import org.edx.mobile.discussion.DiscussionPostsFilter;
 import org.edx.mobile.discussion.DiscussionPostsSort;
+import org.edx.mobile.discussion.DiscussionRequestFields;
 import org.edx.mobile.discussion.DiscussionThread;
 import org.edx.mobile.discussion.DiscussionTopic;
 import org.edx.mobile.model.Page;
@@ -40,7 +41,8 @@ public abstract class GetThreadListTask extends Task<Page<DiscussionThread>> {
     }
 
     public Page<DiscussionThread> call() throws Exception {
-        List<String> requestedFields = Collections.singletonList("profile_image");
+        List<String> requestedFields = Collections.singletonList(
+                DiscussionRequestFields.PROFILE_IMAGE.getQueryParamValue());
         if (!topic.isFollowingType()) {
             return environment.getDiscussionAPI().getThreadList(courseId,
                     getAllTopicIds(), filter.getQueryParamValue(),

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 
 import org.edx.mobile.discussion.DiscussionComment;
+import org.edx.mobile.discussion.DiscussionRequestFields;
 import org.edx.mobile.model.Page;
 
 import java.util.Collections;
@@ -24,7 +25,8 @@ public abstract class GetCommentsListTask extends Task<Page<DiscussionComment>> 
     }
 
     public Page<DiscussionComment> call() throws Exception {
-        List<String> requestedFields = Collections.singletonList("profile_image");
+        List<String> requestedFields = Collections.singletonList(
+                DiscussionRequestFields.PROFILE_IMAGE.getQueryParamValue());
         return environment.getDiscussionAPI().getCommentsList(responseId, PAGE_SIZE, page,
                 requestedFields);
     }

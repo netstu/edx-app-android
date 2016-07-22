@@ -24,7 +24,6 @@ import com.google.gson.annotations.SerializedName;
 import org.edx.mobile.user.DiscussionUser;
 import org.edx.mobile.user.ProfileImage;
 import org.edx.mobile.user.ProfileImageProvider;
-import org.edx.mobile.view.view_holders.AuthorLayoutViewHolder;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -240,5 +239,19 @@ public class DiscussionThread implements Serializable, IAuthorData, ProfileImage
         } else {
             return users.get(author).getProfile().getImage();
         }
+    }
+
+    /**
+     * Incase of PATCH calls we get a {@link DiscussionThread} object that doesn't have
+     * {@link #users} object, so, we patch the new object with existing {@link #users}
+     * object.
+     *
+     * @param newObj Updated {@link DiscussionThread} object returned from server.
+     * @return The patched object.
+     */
+    @NonNull
+    public DiscussionThread patchObject(@NonNull DiscussionThread newObj) {
+        newObj.users = users;
+        return newObj;
     }
 }
